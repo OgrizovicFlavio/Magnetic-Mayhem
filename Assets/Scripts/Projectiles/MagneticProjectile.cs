@@ -59,15 +59,15 @@ public class MagneticProjectile : ProjectileBase
         rb.velocity = Vector3.zero;
         rb.angularVelocity = Vector3.zero;
 
-        //Punto de impacto
+        //Rigidbody se vuelve kinematic
+        rb.isKinematic = true;
+
+        //Detecto la superficie de impacto
         if (Physics.Raycast(transform.position, direction, out RaycastHit hit, 2f, magneticLayer))
         {
             transform.position = hit.point;
             transform.rotation = Quaternion.LookRotation(-hit.normal);
         }
-
-        //Rigidbody se vuelve kinematic
-        rb.isKinematic = true;
 
         // Cambiar la carga del objeto alcanzado si tiene MagneticObject
         MagneticObject magneticTarget = hitSurface.GetComponent<MagneticObject>();

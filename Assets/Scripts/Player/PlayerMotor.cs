@@ -15,12 +15,9 @@ public class PlayerMotor : MonoBehaviour
     [SerializeField] private Transform groundCheck;
     [SerializeField] private float groundDistance = 0.3f;
     [SerializeField] private LayerMask groundLayer;
-    [SerializeField] private LayerMask slopeLayer;
-    [SerializeField] private float maxSlopeAngle = 40f;
 
     private Rigidbody rb;
     private IPlayerInput input;
-
     private float verticalLookRotation = 0f;
     private bool isGrounded = false;
     private MagneticChargeType currentCharge = MagneticChargeType.Positive;
@@ -69,12 +66,6 @@ public class PlayerMotor : MonoBehaviour
     {
         Vector3 moveDir = (transform.right * moveInput.x + transform.forward * moveInput.y).normalized;
 
-        // Restringir si está en rampa empinada y no está en el aire
-        if (IsOnSteepSlope() && isGrounded)
-        {
-            moveDir = Vector3.zero; //CAMBIAR!!
-        }
-
         Vector3 velocity = rb.velocity;
         velocity.x = moveDir.x * moveSpeed;
         velocity.z = moveDir.z * moveSpeed;
@@ -98,7 +89,7 @@ public class PlayerMotor : MonoBehaviour
         Debug.Log("Nueva carga: " + currentCharge);
     }
 
-    public void Shoot()
+    public void Shoot() //CONSULTAR
     {
         Debug.Log("Disparo con carga: " + currentCharge);
     }
@@ -107,17 +98,6 @@ public class PlayerMotor : MonoBehaviour
     {
         Collider[] colliders = Physics.OverlapSphere(groundCheck.position, groundDistance, groundLayer);
         return colliders.Length > 0;
-    }
-
-    private bool IsOnSteepSlope()
-    {
-        if (Physics.Raycast(groundCheck.position, Vector3.down, out RaycastHit hit, groundDistance + 0.1f, slopeLayer))
-        {
-            Debug.Log("Slope angle: " + Vector3.Angle(hit.normal, Vector3.up));
-            float angle = Vector3.Angle(hit.normal, Vector3.up);
-            return angle > maxSlopeAngle;            
-        }
-        return false;
     }
 
     public MagneticChargeType GetCurrentCharge()

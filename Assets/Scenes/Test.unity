@@ -482,9 +482,6 @@ MonoBehaviour:
   groundLayer:
     serializedVersion: 2
     m_Bits: 64
-  slopeLayer:
-    serializedVersion: 2
-    m_Bits: 128
   maxSlopeAngle: 40
 --- !u!114 &457374246
 MonoBehaviour:
@@ -570,7 +567,7 @@ Rigidbody:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 460805391}
   serializedVersion: 4
-  m_Mass: 1
+  m_Mass: 5
   m_Drag: 0
   m_AngularDrag: 0.05
   m_CenterOfMass: {x: 0, y: 0, z: 0}

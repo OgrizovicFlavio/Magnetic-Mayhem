@@ -1,5 +1,6 @@
 using UnityEngine;
 
+//Define los estados del plpayer y qué hacer en cada estado
 public class PlayerFSM : MonoBehaviour
 {
     [SerializeField] private PlayerMotor motor;
@@ -10,6 +11,7 @@ public class PlayerFSM : MonoBehaviour
 
     private void Start()
     {
+        //Instancio el input por mouse y teclado y se lo paso al motor
         input = new KeyboardMouseInput();
         motor.SetInput(input);
         currentState = PlayerState.Idle;

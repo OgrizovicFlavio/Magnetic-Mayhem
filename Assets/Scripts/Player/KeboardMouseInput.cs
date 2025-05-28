@@ -14,12 +14,12 @@ public class KeyboardMouseInput : IPlayerInput
 
     public bool IsShooting()
     {
-        return Input.GetMouseButtonDown(0);
+        return Input.GetMouseButtonDown(0); //Izquierdo
     }
 
     public bool TogglePolarity()
     {
-        return Input.GetMouseButtonDown(1);
+        return Input.GetMouseButtonDown(1); //Derecho
     }
 
     public bool IsJumping()
