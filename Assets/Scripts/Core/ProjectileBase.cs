@@ -21,7 +21,6 @@ public abstract class ProjectileBase : MonoBehaviour, IPooleable
         spawnTime = Time.time;
     }
 
-    protected abstract MagneticChargeType GetChargeType();
     protected abstract void OnImpact(); 
 
     protected virtual float GetCollisionDelay() => 0.05f; 

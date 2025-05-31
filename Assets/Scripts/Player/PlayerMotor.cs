@@ -16,6 +16,10 @@ public class PlayerMotor : MonoBehaviour
     [SerializeField] private float groundDistance = 0.3f;
     [SerializeField] private LayerMask groundLayer;
 
+    [Header("Slope Detection")]
+    [SerializeField] private float maxSlopeAngle = 40f;
+    [SerializeField] private float slopeCheckDistance = 5f;
+
     private Rigidbody rb;
     private IPlayerInput input;
     private float verticalLookRotation = 0f;
@@ -66,10 +70,47 @@ public class PlayerMotor : MonoBehaviour
     {
         Vector3 moveDir = (transform.right * moveInput.x + transform.forward * moveInput.y).normalized;
 
+        if (!CanMove(moveDir))
+            return;
+
         Vector3 velocity = rb.velocity;
         velocity.x = moveDir.x * moveSpeed;
         velocity.z = moveDir.z * moveSpeed;
         rb.velocity = velocity;
+    }
+
+    private bool CanMove(Vector3 moveDir)
+    {
+        Terrain terrain = Terrain.activeTerrain;
+        if (terrain == null) 
+            return true; //si no hay terreno, que se pueda mover
+
+        Vector3 relativePos = GetMapPos();
+        Vector3 normal = terrain.terrainData.GetInterpolatedNormal(relativePos.x, relativePos.z);
+        float angle = Vector3.Angle(normal, Vector3.up);
+
+        float currentHeight = terrain.SampleHeight(rb.position);
+        float nextHeight = terrain.SampleHeight(rb.position + moveDir * slopeCheckDistance);
+
+        Debug.Log($"Angle: {angle}");
+
+        //Si la pendiente es muy empinada y estamos subiendo, no se puede mover
+        if (angle > maxSlopeAngle && nextHeight > currentHeight)
+            return false;
+
+        return true;
+    }
+
+    private Vector3 GetMapPos()
+    {
+        Vector3 pos = rb.position;
+        Terrain terrain = Terrain.activeTerrain;
+
+        return new Vector3(
+            (pos.x - terrain.transform.position.x) / terrain.terrainData.size.x,
+            0,
+            (pos.z - terrain.transform.position.z) / terrain.terrainData.size.z
+        );
     }
 
     public void Jump()

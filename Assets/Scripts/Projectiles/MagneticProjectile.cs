@@ -1,13 +1,13 @@
 using UnityEngine;
 
-public class MagneticProjectile : ProjectileBase
+public class MagneticProjectile : ProjectileBase, IMagneticEmitter
 {
     [Header("Settings")]
     [SerializeField] private Renderer visualRenderer;
     [SerializeField] private Color positiveColor = Color.red;
     [SerializeField] private Color negativeColor = Color.blue;
     [SerializeField] private LayerMask magneticLayer;
-    [SerializeField] float effectRadius = 10f;
+    [SerializeField] float effectRadius = 20f;
     [SerializeField] float magneticForce = 10f;
 
     private MagneticChargeType charge;
@@ -28,10 +28,10 @@ public class MagneticProjectile : ProjectileBase
         }
     }
 
-    protected override MagneticChargeType GetChargeType()
-    {
-        return charge;
-    }
+    public float GetEffectRadius() => effectRadius;
+    public float GetForceStrength() => magneticForce;
+    public Vector3 GetPosition() => transform.position;
+    public MagneticChargeType GetChargeType() => charge;
 
     protected override void OnTriggerEnter(Collider other)
     {
@@ -87,11 +87,23 @@ public class MagneticProjectile : ProjectileBase
             joint.breakTorque = Mathf.Infinity;
         }
 
-        //Aplico fuerza magnética a objetos cercanos
-        ApplyMagneticEffect();
-
         //Desactivación
         Invoke(nameof(Deactivate), 5f);
+    }
+
+    private void FixedUpdate()
+    {
+        if (!hasImpacted)
+            return;
+
+        Ray ray = new Ray(transform.position, transform.forward);
+        if (Physics.SphereCast(ray, 0.5f, out RaycastHit hit, effectRadius, magneticLayer))
+        {
+            Debug.DrawLine(transform.position, hit.point, Color.red);
+            Debug.DrawRay(hit.point, hit.normal, Color.yellow);
+        }
+
+        ApplyMagneticEffect();
     }
 
     private void ApplyMagneticEffect()
@@ -100,13 +112,13 @@ public class MagneticProjectile : ProjectileBase
 
         foreach (Collider col in colliders)
         {
-            if (col.transform == this.transform)
+            if (col.transform == this.transform) 
                 continue;
 
-            IMagnetic magneticTarget = col.GetComponent<IMagnetic>();
-            if (magneticTarget != null)
+            IMagneticReceiver receiver = col.GetComponent<IMagneticReceiver>();
+            if (receiver != null)
             {
-                magneticTarget.ApplyMagneticForce(transform.position, magneticForce, charge);
+                receiver.ApplyMagneticForce(transform.position, magneticForce, charge);
             }
         }
     }
@@ -157,4 +169,6 @@ public class MagneticProjectile : ProjectileBase
         if (joint != null)
             Destroy(joint);
     }
+
+
 }
