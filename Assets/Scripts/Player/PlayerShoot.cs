@@ -33,10 +33,8 @@ public class PlayerShoot : MonoBehaviour
         Ray ray = playerAim.GetAimingRay();
         Vector3 direction = ray.direction;
 
-        //Instancio desde la pool
-        MagneticProjectile projectile = PoolManager.Instance.Get<MagneticProjectile>(firePoint.position, Quaternion.LookRotation(direction));
-
-        projectile.SetCharge(motor.GetCurrentCharge()); //Asigna la carga actual
-        projectile.Launch(direction); //Disparo
+        Sticky sticky = PoolManager.Instance.Get<Sticky>(firePoint.position, Quaternion.LookRotation(direction));
+        sticky.SetCharge(motor.GetCurrentCharge());
+        sticky.Launch(direction);
     }
 }

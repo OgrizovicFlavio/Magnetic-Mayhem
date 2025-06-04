@@ -3,10 +3,10 @@ using UnityEngine;
 public class GameManager : MonoBehaviour
 {
     [Header("Projectile Prefabs")]
-    [SerializeField] private MagneticProjectile magneticProjectilePrefab;
+    [SerializeField] private Sticky stickyMagnetProjectile;
 
     private void Start()
     {
-        PoolManager.Instance.InitializePool(magneticProjectilePrefab, 20);
+        PoolManager.Instance.InitializePool(stickyMagnetProjectile, 20);
     }
 }

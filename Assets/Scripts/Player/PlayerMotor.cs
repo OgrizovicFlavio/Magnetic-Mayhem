@@ -92,8 +92,6 @@ public class PlayerMotor : MonoBehaviour
         float currentHeight = terrain.SampleHeight(rb.position);
         float nextHeight = terrain.SampleHeight(rb.position + moveDir * slopeCheckDistance);
 
-        Debug.Log($"Angle: {angle}");
-
         //Si la pendiente es muy empinada y estamos subiendo, no se puede mover
         if (angle > maxSlopeAngle && nextHeight > currentHeight)
             return false;
