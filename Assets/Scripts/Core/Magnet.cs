@@ -4,12 +4,13 @@ using UnityEngine;
 [RequireComponent(typeof(Rigidbody))]
 public class Magnet : MonoBehaviour
 {
-    [Header("Configuración")]
+    [Header("Configuration")]
     [SerializeField] private MagneticChargeType magneticCharge = MagneticChargeType.None;
     [SerializeField] private float magneticForce = 10f;
     [SerializeField] private MagnetDetector magnetDetector;
+    [SerializeField] private MagnetType magnetType = MagnetType.Ferrous;
 
-    [Header("Colores")]
+    [Header("Colors")]
     [SerializeField] private Renderer visualRenderer;
     private static readonly Color[] chargeColors = new Color[3]
     {
@@ -23,6 +24,7 @@ public class Magnet : MonoBehaviour
     private MaterialPropertyBlock block;
     private bool isMagnetActive = false;
 
+    public MagnetType Type => magnetType;
     public MagneticChargeType Charge => magneticCharge;
     public float Force => magneticForce;
     public Rigidbody Rb => rb;
@@ -49,6 +51,9 @@ public class Magnet : MonoBehaviour
         foreach (var other in magnetsInRange)
         {
             if (other == null || other == this)
+                continue;
+
+            if (this.Type == MagnetType.Sticky && other.Type == MagnetType.Sticky)
                 continue;
 
             if (Charge == MagneticChargeType.None || other.Charge == MagneticChargeType.None)

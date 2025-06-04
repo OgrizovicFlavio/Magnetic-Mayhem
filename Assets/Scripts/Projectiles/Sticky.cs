@@ -21,14 +21,6 @@ public class Sticky : MonoBehaviour, IPooleable
         magnet = GetComponent<Magnet>();
     }
 
-    public void Launch(Vector3 direction)
-    {
-        hasImpacted = false;
-        launchDirection = direction.normalized;
-        rb.velocity = launchDirection * speed;
-        spawnTime = Time.time;
-    }
-
     private void Update()
     {
         if (!hasImpacted && Time.time - spawnTime > lifetime)
@@ -65,6 +57,14 @@ public class Sticky : MonoBehaviour, IPooleable
         magnet.ActivateMagnet();
 
         Invoke(nameof(Deactivate), lifetime);
+    }
+
+    public void Launch(Vector3 direction)
+    {
+        hasImpacted = false;
+        launchDirection = direction.normalized;
+        rb.velocity = launchDirection * speed;
+        spawnTime = Time.time;
     }
 
     private void Deactivate()
