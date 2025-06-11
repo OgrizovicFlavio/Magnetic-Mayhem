@@ -1,7 +1,8 @@
 public enum PlayerState
 {
+    None = 0,
     Idle,
-    Move,
+    Run,
     Jump,
     Shoot,
     Hurt,

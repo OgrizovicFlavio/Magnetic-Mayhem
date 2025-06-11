@@ -1,105 +1,63 @@
 using UnityEngine;
+using System.Collections.Generic;
 
-//Define los estados del plpayer y qué hacer en cada estado
 public class PlayerFSM : MonoBehaviour
 {
-    [SerializeField] private PlayerMotor motor;
+    [SerializeField] private Controller controller;
+    [SerializeField] private PlayerShoot shooter;
 
     private IPlayerInput input;
-    private PlayerState currentState;
-    private PlayerState lastState;
+    private List<BaseState> states;
+    private BaseState currentState;
+
+    public Controller GetController() => controller;
+    public PlayerShoot GetShooter() => shooter;
+    public IPlayerInput GetInput() => input;
 
     private void Start()
     {
-        //Instancio el input por mouse y teclado y se lo paso al motor
         input = new KeyboardMouseInput();
-        motor.SetInput(input);
-        currentState = PlayerState.Idle;
+        controller.SetInput(input);
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
+
+        states = new List<BaseState>
+        {
+            new IdleState(this),
+            new RunState(this),
+            new JumpState(this),
+            new ShootState(this),
+            new HurtState(this),
+            new DeadState(this)
+        };
+
+        ChangeState(PlayerState.Idle);
     }
 
     private void Update()
     {
-        if (input != null)
-        {
-            motor.RotateCamera(input.GetLookInput());
-        }
+        controller.RotateCamera(input.GetLookInput());
 
-        switch (currentState)
-        {
-            case PlayerState.Idle:
-                HandleIdle();
-                break;
-            case PlayerState.Move:
-                HandleMove();
-                break;
-            case PlayerState.Jump:
-                HandleJump();
-                break;
-            case PlayerState.Shoot:
-                HandleShoot();
-                break;
-            case PlayerState.Hurt:
-                break;
-            case PlayerState.Dead:
-                break;
-        }
+        if (input.ToggleCharge())
+            controller.ToggleCharge();
+
+        controller.TryPossess();
+        currentState?.OnUpdate();
     }
 
-    private void HandleIdle()
+    public void ChangeState(PlayerState newState)
     {
-        Vector2 move = input.GetMoveInput();
-        motor.SetMoveInput(Vector2.zero);
+        currentState?.OnExit();
+        currentState = states.Find(s => s.playerState == newState);
 
-        if (move.magnitude > 0.1f)
+        if (currentState == null)
         {
-            motor.SetMoveInput(move);
-            TransitionTo(PlayerState.Move);
+            Debug.LogError("Estado no encontrado: " + newState);
+            return;
         }
-        else if (input.IsJumping())
-        {
-            TransitionTo(PlayerState.Jump);
-        }
-        else if (input.IsShooting())
-        {
-            TransitionTo(PlayerState.Shoot);
-        }
-    }
 
-    private void HandleMove()
-    {
-        Vector2 move = input.GetMoveInput();
-        motor.SetMoveInput(move);
-
-        if (move.magnitude < 0.1f)
-        {
-            TransitionTo(PlayerState.Idle);
-        }
-        else if (input.IsJumping())
-        {
-            TransitionTo(PlayerState.Jump);
-        }
-        else if (input.IsShooting())
-        {
-            TransitionTo(PlayerState.Shoot);
-        }
-    }
-
-    private void HandleJump()
-    {
-        motor.Jump();
-        TransitionTo(PlayerState.Idle);
-    }
-
-    private void HandleShoot()
-    {
-        motor.Shoot();
-        TransitionTo(PlayerState.Idle);
-    }
-
-    private void TransitionTo(PlayerState newState)
-    {
-        lastState = currentState;
-        currentState = newState;
+        //Debug.Log("Entrando al estado: " + currentState.playerState);
+        currentState.OnEnter();
     }
 }
 

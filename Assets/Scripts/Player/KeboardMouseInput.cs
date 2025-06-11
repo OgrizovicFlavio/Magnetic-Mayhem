@@ -17,7 +17,7 @@ public class KeyboardMouseInput : IPlayerInput
         return Input.GetMouseButtonDown(0); //Izquierdo
     }
 
-    public bool TogglePolarity()
+    public bool ToggleCharge()
     {
         return Input.GetMouseButtonDown(1); //Derecho
     }

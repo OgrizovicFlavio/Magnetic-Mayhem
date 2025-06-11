@@ -1,15 +1,16 @@
 using UnityEngine;
 
-[RequireComponent(typeof(Rigidbody))]
-public class PlayerMotor : MonoBehaviour
+public class Controller : MonoBehaviour
 {
     [Header("References")]
     [SerializeField] private Transform cameraHolder;
 
     [Header("Settings")]
-    [SerializeField] private float moveSpeed = 5f;
-    [SerializeField] private float jumpForce = 7f;
+    [SerializeField] private float moveSpeed = 10f;
+    [SerializeField] private float jumpForce = 10f;
     [SerializeField] private float mouseSensitivity = 200f;
+    [SerializeField] private float fallMultiplier = 2.5f;
+    [SerializeField] private float lowJumpMultiplier = 2f;
 
     [Header("Ground Detection")]
     [SerializeField] private Transform groundCheck;
@@ -21,11 +22,12 @@ public class PlayerMotor : MonoBehaviour
     [SerializeField] private float slopeCheckDistance = 5f;
 
     private Rigidbody rb;
+    private Vector2 currentMoveInput;
+    private Vector3 currentVelocity = Vector3.zero;
     private IPlayerInput input;
+    private MagneticChargeType currentCharge = MagneticChargeType.Positive;
     private float verticalLookRotation = 0f;
     private bool isGrounded = false;
-    private MagneticChargeType currentCharge = MagneticChargeType.Positive;
-    private Vector2 currentMoveInput;
 
     public void SetInput(IPlayerInput inputSource)
     {
@@ -35,13 +37,23 @@ public class PlayerMotor : MonoBehaviour
     private void Awake()
     {
         rb = GetComponent<Rigidbody>();
-        Cursor.lockState = CursorLockMode.Locked;
-        Cursor.visible = false;
     }
 
     private void Update()
     {
         isGrounded = CheckIfGrounded();
+
+        //Aumenta la gravedad si está cayendo
+        if (rb.velocity.y < 0)
+        {
+            rb.velocity += Vector3.up * Physics.gravity.y * (fallMultiplier - 1) * Time.deltaTime;
+        }
+
+        //Salto "corto"
+        else if (rb.velocity.y > 0 && !input.IsJumping())
+        {
+            rb.velocity += Vector3.up * Physics.gravity.y * (lowJumpMultiplier - 1) * Time.deltaTime;
+        }
     }
 
     private void FixedUpdate()
@@ -61,7 +73,7 @@ public class PlayerMotor : MonoBehaviour
 
         float mouseY = lookInput.y * mouseSensitivity * Time.deltaTime;
         verticalLookRotation -= mouseY;
-        verticalLookRotation = Mathf.Clamp(verticalLookRotation, -90f, 90f);
+        verticalLookRotation = Mathf.Clamp(verticalLookRotation, -40f, 90f);
 
         cameraHolder.localEulerAngles = new Vector3(verticalLookRotation, 0f, 0f);
     }
@@ -73,10 +85,9 @@ public class PlayerMotor : MonoBehaviour
         if (!CanMove(moveDir))
             return;
 
-        Vector3 velocity = rb.velocity;
-        velocity.x = moveDir.x * moveSpeed;
-        velocity.z = moveDir.z * moveSpeed;
-        rb.velocity = velocity;
+        Vector3 desiredVelocity = new Vector3(moveDir.x * moveSpeed, rb.velocity.y, moveDir.z * moveSpeed);
+
+        rb.velocity = Vector3.SmoothDamp(rb.velocity, desiredVelocity, ref currentVelocity, 0.1f);
     }
 
     private bool CanMove(Vector3 moveDir)
@@ -128,9 +139,19 @@ public class PlayerMotor : MonoBehaviour
         Debug.Log("Nueva carga: " + currentCharge);
     }
 
-    public void Shoot() //CONSULTAR
+    public void TryPossess()
     {
-        Debug.Log("Disparo con carga: " + currentCharge);
+        if (input == null || !input.IsInteracting()) 
+            return;
+
+        Ray ray = new Ray(cameraHolder.position, cameraHolder.forward);
+        if (Physics.Raycast(ray, out RaycastHit hit, 10f))
+        {
+            if (hit.collider.TryGetComponent<IControllable>(out var controllable))
+            {
+                controllable.ControlEntity(this);
+            }
+        }
     }
 
     private bool CheckIfGrounded()

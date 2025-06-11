@@ -3,7 +3,7 @@ using UnityEngine;
 public class PlayerShoot : MonoBehaviour
 {
     [Header("References")]
-    [SerializeField] private PlayerMotor motor;
+    [SerializeField] private Controller controller;
     [SerializeField] private Camera playerCamera;
     [SerializeField] private Transform firePoint;
     [SerializeField] private PlayerAim playerAim;
@@ -13,17 +13,12 @@ public class PlayerShoot : MonoBehaviour
 
     private float nextFireTime = 0f;
 
-    private void Update()
+    public void TryShoot()
     {
-        if (Input.GetMouseButtonDown(0) && Time.time >= nextFireTime)
+        if (Time.time >= nextFireTime)
         {
             Shoot();
             nextFireTime = Time.time + fireRate;
-        }
-
-        if (Input.GetMouseButtonDown(1))
-        {
-            motor.ToggleCharge();
         }
     }
 
@@ -34,7 +29,7 @@ public class PlayerShoot : MonoBehaviour
         Vector3 direction = ray.direction;
 
         Sticky sticky = PoolManager.Instance.Get<Sticky>(firePoint.position, Quaternion.LookRotation(direction));
-        sticky.SetCharge(motor.GetCurrentCharge());
+        sticky.SetCharge(controller.GetCurrentCharge());
         sticky.Launch(direction);
     }
 }

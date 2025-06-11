@@ -3,7 +3,7 @@ using UnityEngine;
 public class PlayerAim : MonoBehaviour
 {
     [Header("References")]
-    [SerializeField] private PlayerMotor motor;
+    [SerializeField] private Controller controller;
     [SerializeField] private Camera playerCamera;
     [SerializeField] private Transform firePoint;
     [SerializeField] private GameObject laserSightPrefab;
@@ -14,6 +14,7 @@ public class PlayerAim : MonoBehaviour
     [SerializeField] private Color negativeColor = Color.blue;
 
     private LineRenderer lineRenderer;
+    private MagneticChargeType lastCharge;
 
     private void Start()
     {
@@ -41,16 +42,13 @@ public class PlayerAim : MonoBehaviour
         lineRenderer.SetPosition(0, start);
         lineRenderer.SetPosition(1, end);
 
-        MagneticChargeType charge = motor.GetCurrentCharge();
-        if (charge == MagneticChargeType.Positive)
+        MagneticChargeType charge = controller.GetCurrentCharge();
+        if (charge != lastCharge)
         {
-            lineRenderer.startColor = positiveColor;
-            lineRenderer.endColor = positiveColor;
-        }
-        else
-        {
-            lineRenderer.startColor = negativeColor;
-            lineRenderer.endColor = negativeColor;
+            Color color = (charge == MagneticChargeType.Positive) ? positiveColor : negativeColor;
+            lineRenderer.startColor = color;
+            lineRenderer.endColor = color;
+            lastCharge = charge;
         }
     }
 
