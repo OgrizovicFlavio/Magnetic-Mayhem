@@ -1,5 +1,3 @@
-using UnityEngine;
-
 public class MagnetizedEnemyState : BaseEnemyState
 {
     private EnemyState previousState;

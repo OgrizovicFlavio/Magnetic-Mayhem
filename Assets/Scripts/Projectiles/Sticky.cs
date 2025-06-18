@@ -48,36 +48,31 @@ public class Sticky : MonoBehaviour, IPooleable
         if (hasImpacted || Time.time - spawnTime < collisionDelay)
             return;
 
-        hasImpacted = true;
+        rb.velocity = Vector3.zero;
+        rb.angularVelocity = Vector3.zero;
+        rb.isKinematic = true;
 
-        if (!rb.isKinematic)
-        {
-            rb.velocity = Vector3.zero;
-            rb.angularVelocity = Vector3.zero;
-        }
+        transform.position = collision.contacts[0].point;
+        transform.SetParent(collision.transform);
+        transform.rotation = Quaternion.LookRotation(-collision.contacts[0].normal);
 
-        // Ver si es enemigo
-        bool isEnemy = collision.transform.TryGetComponent<EnemyController>(out _);
-
-        // Pegarse visualmente
-        if (isEnemy)
-        {
-            transform.SetParent(collision.transform);
-        }
-        else
-        {
-            transform.position = collision.contacts[0].point;
-            transform.SetParent(collision.transform);
-            transform.rotation = Quaternion.LookRotation(-collision.contacts[0].normal);
-        }
-
-        // Si tiene Rigidbody y NO es enemigo, lo inmovilizamos
         targetRb = collision.rigidbody;
-        if (targetRb != null && !isEnemy)
+
+        if (targetRb != null)
         {
-            wasKinematic = targetRb.isKinematic;
-            if (!targetRb.isKinematic)
-                targetRb.isKinematic = true;
+            if (!collision.transform.TryGetComponent<EnemyController>(out var enemy))
+            {
+                
+                wasKinematic = targetRb.isKinematic;
+                if (!targetRb.isKinematic)
+                    targetRb.isKinematic = true;
+            }
+        }
+
+        if (collision.transform.TryGetComponent<Magnet>(out var otherMagnet))
+        {
+            otherMagnet.IgnoreMagnet(magnet);
+            magnet.IgnoreMagnet(otherMagnet);
         }
 
         rb.isKinematic = true;
@@ -105,6 +100,8 @@ public class Sticky : MonoBehaviour, IPooleable
 
         transform.SetParent(null);
         rb.isKinematic = false;
+
+        magnet.RemoveAllMagnets();
 
         PoolManager.Instance.ReturnToPool(this);
     }

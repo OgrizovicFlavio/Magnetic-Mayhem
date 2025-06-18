@@ -53,7 +53,7 @@ public class EnemyFSM
         if (currentState.GetStateType() == EnemyState.Magnetized)
             return; // Ya está magnetizado, no sobreescribas el estado anterior
 
-        magnetizedState.Set(currentState.GetStateType());
+        //magnetizedState.Set(currentState.GetStateType());
         ChangeState(EnemyState.Magnetized);
     }
 

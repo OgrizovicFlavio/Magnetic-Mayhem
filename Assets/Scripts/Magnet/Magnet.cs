@@ -22,6 +22,7 @@ public class Magnet : MonoBehaviour
 
     private Rigidbody rb;
     private List<Magnet> magnetsInRange = new List<Magnet>();
+    private List<Magnet> magnetsIgnored = new List<Magnet>();
     private MaterialPropertyBlock block;
     private bool isMagnetActive = false;
 
@@ -51,6 +52,9 @@ public class Magnet : MonoBehaviour
 
         foreach (var other in magnetsInRange)
         {
+            if (magnetsIgnored.Contains(other))
+                continue;
+
             if (other == null || other == this)
                 continue;
 
@@ -99,6 +103,22 @@ public class Magnet : MonoBehaviour
     public void DeactivateMagnet()
     {
         isMagnetActive = false;
+    }
+
+    public void IgnoreMagnet(Magnet other)
+    {
+        if (!magnetsIgnored.Contains(other))
+        {
+            magnetsIgnored.Add(other);
+        }
+    }
+
+    public void RemoveIgnoredMagnet (Magnet other)
+    {
+        if (magnetsIgnored.Contains(other))
+        {
+            magnetsIgnored.Remove(other);
+        }
     }
 
     public void SetCharge(MagneticChargeType newCharge)
@@ -156,5 +176,15 @@ public class Magnet : MonoBehaviour
             magnetDetector.onMagnetEnter -= OnMagnetEnter;
             magnetDetector.onMagnetExit -= OnMagnetExit;
         }
+    }
+
+    public void RemoveAllMagnets()
+    {
+        foreach (var item in magnetsIgnored)
+        {
+            item.RemoveIgnoredMagnet(this);
+        }
+
+        magnetsIgnored.Clear();
     }
 }
