@@ -1,5 +1,5 @@
 public interface IControllable
 {
-    void ControlEntity(Controller controller);
-    void OutlineEntity();
+    void ControlEntity(PlayerController controller);
+    void SetVisualToController(PlayerController controller);
 }

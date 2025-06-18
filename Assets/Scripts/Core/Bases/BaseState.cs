@@ -1,11 +1,10 @@
-public abstract class BaseState
+public abstract class BaseState<T>
 {
-    public PlayerState playerState = PlayerState.None;
-    protected PlayerFSM fsm;
+    protected T context;
 
-    public BaseState(PlayerFSM fsm)
+    public BaseState(T context)
     {
-        this.fsm = fsm;
+        this.context = context;
     }
 
     public virtual void OnEnter() { }

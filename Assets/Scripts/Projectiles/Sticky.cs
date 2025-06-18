@@ -3,14 +3,16 @@ using UnityEngine;
 [RequireComponent(typeof(Rigidbody))]
 public class Sticky : MonoBehaviour, IPooleable
 {
+    [Header("Settings")]
     [SerializeField] private float speed = 15f;
     [SerializeField] private float lifetime = 5f;
-    [SerializeField] private LayerMask impactMask;
+    [SerializeField] private float collisionDelay = 0.05f;
 
     private Rigidbody rb;
     private Rigidbody targetRb = null;
     private Magnet magnet;
     private Vector3 launchDirection;
+    private bool isDeactivating = false;
     private bool hasImpacted = false;
     private bool wasKinematic = false;
     private float spawnTime;
@@ -19,6 +21,18 @@ public class Sticky : MonoBehaviour, IPooleable
     {
         rb = GetComponent<Rigidbody>();
         magnet = GetComponent<Magnet>();
+
+        if (magnet != null)
+            magnet.SetStickyOwner(this);
+    }
+
+    public void Launch(Vector3 direction)
+    {
+        hasImpacted = false;
+        isDeactivating = false;
+        launchDirection = direction.normalized;
+        rb.velocity = launchDirection * speed;
+        spawnTime = Time.time;
     }
 
     private void Update()
@@ -31,48 +45,56 @@ public class Sticky : MonoBehaviour, IPooleable
 
     private void OnCollisionEnter(Collision collision)
     {
-        if (hasImpacted) return;
+        if (hasImpacted || Time.time - spawnTime < collisionDelay)
+            return;
+
         hasImpacted = true;
 
-        rb.velocity = Vector3.zero;
-        rb.angularVelocity = Vector3.zero;
-
-        Transform hitTransform = collision.transform;
-        transform.position = collision.contacts[0].point;
-        transform.rotation = Quaternion.LookRotation(-collision.contacts[0].normal);
-
-        Rigidbody hitRb = collision.rigidbody;
-
-        if (hitRb != null && !hitRb.isKinematic)
+        if (!rb.isKinematic)
         {
-            wasKinematic = hitRb.isKinematic;
-            targetRb = hitRb;
+            rb.velocity = Vector3.zero;
+            rb.angularVelocity = Vector3.zero;
+        }
 
-            if (!hitRb.isKinematic)
-                hitRb.isKinematic = true;
+        // Ver si es enemigo
+        bool isEnemy = collision.transform.TryGetComponent<EnemyController>(out _);
+
+        // Pegarse visualmente
+        if (isEnemy)
+        {
+            transform.SetParent(collision.transform);
+        }
+        else
+        {
+            transform.position = collision.contacts[0].point;
+            transform.SetParent(collision.transform);
+            transform.rotation = Quaternion.LookRotation(-collision.contacts[0].normal);
+        }
+
+        // Si tiene Rigidbody y NO es enemigo, lo inmovilizamos
+        targetRb = collision.rigidbody;
+        if (targetRb != null && !isEnemy)
+        {
+            wasKinematic = targetRb.isKinematic;
+            if (!targetRb.isKinematic)
+                targetRb.isKinematic = true;
         }
 
         rb.isKinematic = true;
 
-        magnet.ActivateMagnet();
+        if (magnet != null)
+            magnet.ActivateMagnet();
 
         Invoke(nameof(Deactivate), lifetime);
     }
 
-    public void Launch(Vector3 direction)
-    {
-        hasImpacted = false;
-        launchDirection = direction.normalized;
-        rb.velocity = launchDirection * speed;
-        spawnTime = Time.time;
-    }
-
     private void Deactivate()
     {
+        isDeactivating = true;
         hasImpacted = false;
-        magnet.DeactivateMagnet();
-        transform.SetParent(null);
-        rb.isKinematic = false;
+
+        if (magnet != null)
+            magnet.DeactivateMagnet();
 
         if (targetRb != null)
         {
@@ -81,12 +103,27 @@ public class Sticky : MonoBehaviour, IPooleable
             wasKinematic = false;
         }
 
+        transform.SetParent(null);
+        rb.isKinematic = false;
+
         PoolManager.Instance.ReturnToPool(this);
+    }
+
+    public bool IsDeactivating()
+    {
+        return isDeactivating;
+    }
+
+    public void SetCharge(MagneticChargeType newCharge)
+    {
+        if (magnet != null)
+            magnet.SetCharge(newCharge);
     }
 
     public void GetObjectFromPool()
     {
         hasImpacted = false;
+        isDeactivating = false;
 
         if (targetRb != null)
         {
@@ -99,6 +136,12 @@ public class Sticky : MonoBehaviour, IPooleable
         rb.velocity = Vector3.zero;
         rb.angularVelocity = Vector3.zero;
         transform.SetParent(null);
+
+        if (magnet != null)
+        {
+            magnet.SetCharge(MagneticChargeType.None);
+            magnet.DeactivateMagnet();
+        }
     }
 
     public void ReturnObjectToPool() { }
@@ -106,8 +149,6 @@ public class Sticky : MonoBehaviour, IPooleable
     public void ResetToDefault()
     {
         GetObjectFromPool();
-        magnet.SetCharge(MagneticChargeType.None);
-        magnet.DeactivateMagnet();
     }
 
     public void Disable()
@@ -115,11 +156,8 @@ public class Sticky : MonoBehaviour, IPooleable
         rb.velocity = Vector3.zero;
         rb.angularVelocity = Vector3.zero;
         rb.isKinematic = true;
-        magnet.DeactivateMagnet();
-    }
 
-    public void SetCharge(MagneticChargeType newCharge)
-    {
-        magnet.SetCharge(newCharge);
+        if (magnet != null)
+            magnet.DeactivateMagnet();
     }
 }
