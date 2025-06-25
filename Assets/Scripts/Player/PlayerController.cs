@@ -4,11 +4,11 @@ public class PlayerController : MonoBehaviour
 {
     [Header("References")]
     [SerializeField] private Transform cameraHolder;
-    [SerializeField] private Shooter shooter;
+    [SerializeField] private PlayerShoot shooter;
 
     [Header("Movement & Look")]
-    [SerializeField] private Movement movement;
-    [SerializeField] private Look look;
+    [SerializeField] private PlayerMovement movement;
+    [SerializeField] private PlayerLook look;
 
     private PlayerFSM playerFSM;
     private Rigidbody rb;
@@ -38,7 +38,6 @@ public class PlayerController : MonoBehaviour
         movement.Initialize(rb, cameraHolder);
         look.Initialize(transform, cameraHolder);
         shooter.Initialize(cameraHolder, this);
-
         playerFSM = new PlayerFSM(this, input, shooter.Shoot, shooter.ToggleCharge);
         RegisterOriginalBody(transform.parent, rb, playerFSM);
     }

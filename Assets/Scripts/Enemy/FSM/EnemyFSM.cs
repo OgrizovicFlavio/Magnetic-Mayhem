@@ -1,12 +1,10 @@
 using System.Collections.Generic;
-using UnityEngine;
 
 public class EnemyFSM
 {
     private EnemyController controller;
     private List<BaseEnemyState> states;
     private BaseEnemyState currentState;
-    private MagnetizedEnemyState magnetizedState;
 
     public EnemyController GetController() => controller;
 
@@ -16,17 +14,13 @@ public class EnemyFSM
     {
         this.controller = controller;
 
-        magnetizedState = new MagnetizedEnemyState(this);
-
         states = new List<BaseEnemyState>
         {
             new PatrolEnemyState(this),
             new ChaseEnemyState(this),
             new AttackEnemyState(this),
-            magnetizedState,
+            new MagnetizedEnemyState(this),
         };
-
-        ChangeState(EnemyState.Patrol);
     }
 
     public void OnUpdate()
@@ -36,33 +30,23 @@ public class EnemyFSM
 
     public void ChangeState(EnemyState newState)
     {
+        if (currentState?.GetStateType() == newState)
+            return;
+
         currentState?.OnExit();
         currentState = states.Find(s => s.GetStateType() == newState);
-
-        if (currentState == null)
-        {
-            Debug.LogError("Enemy state not found: " + newState);
-            return;
-        }
 
         currentState.OnEnter();
     }
 
-    public void EnterMagnetizedState()
+    public BaseEnemyState FindNextState()
     {
-        if (currentState.GetStateType() == EnemyState.Magnetized)
-            return; // Ya está magnetizado, no sobreescribas el estado anterior
+        if (controller.IsPlayerInAttackRange())
+            return states.Find(s => s.GetStateType() == EnemyState.Attack);
 
-        //magnetizedState.Set(currentState.GetStateType());
-        ChangeState(EnemyState.Magnetized);
-    }
+        if (controller.IsPlayerInChaseRange())
+            return states.Find(s => s.GetStateType() == EnemyState.Chase);
 
-    public void ExitMagnetizedState()
-    {
-        if (currentState.GetStateType() == EnemyState.Magnetized)
-        {
-            Debug.Log("FSM: Salgo del estado Magnetized hacia: " + magnetizedState.PreviousState);
-            ChangeState(magnetizedState.PreviousState);
-        }
+        return states.Find(s => s.GetStateType() == EnemyState.Patrol);
     }
 }

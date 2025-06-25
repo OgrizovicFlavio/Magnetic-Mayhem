@@ -1,25 +1,34 @@
 public class MagnetizedEnemyState : BaseEnemyState
 {
-    private EnemyState previousState;
-
-    public EnemyState PreviousState => previousState;
-
     public MagnetizedEnemyState(EnemyFSM fsm) : base(fsm)
     {
         enemyState = EnemyState.Magnetized;
     }
 
-    public void Set(EnemyState previous)
+    public override void OnEnter()
     {
-        this.previousState = previous;
+        movement.StopMovement();
     }
-
-    public override void OnEnter() { }
 
     public override void OnUpdate()
     {
+        if (controller.IsMagnetized())
+            return;
 
+        if (controller.HasCollidedWhileMagnetized())
+        {
+            bool isHeightRecovered = controller.UpdateHeight(0.2f);
+
+            if (isHeightRecovered)
+            {
+                controller.ResetCollisionFlag();
+                context.ChangeState(context.FindNextState().GetStateType());
+            }
+        }
     }
 
-    public override void OnExit() { }
+    public override void OnExit()
+    {
+        movement.StopMovement();
+    }
 }

@@ -1,5 +1,3 @@
-using UnityEngine;
-
 public class ChaseEnemyState : BaseEnemyState
 {
     public ChaseEnemyState(EnemyFSM fsm) : base(fsm)
@@ -9,27 +7,29 @@ public class ChaseEnemyState : BaseEnemyState
 
     public override void OnEnter()
     {
-        Debug.Log("Enemy entered CHASE state");
+        movement.StopMovement();
     }
 
     public override void OnUpdate()
     {
-        var controller = context.GetController();
         var target = controller.GetTarget();
+
+        if (controller.IsMagnetized())
+        {
+            context.ChangeState(EnemyState.Magnetized);
+            return;
+        }
 
         if (target != null)
         {
-            controller.MoveTowards(target.position);
+            movement.MoveTowards(target.position);
+            movement.RotateTowards(target.position);
         }
 
         if (controller.IsPlayerInAttackRange())
-        {
             context.ChangeState(EnemyState.Attack);
-        }
         else if (!controller.IsPlayerInChaseRange())
-        {
             context.ChangeState(EnemyState.Patrol);
-        }
     }
 
     public override void OnExit() { }

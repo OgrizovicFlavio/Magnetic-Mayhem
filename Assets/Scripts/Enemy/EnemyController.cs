@@ -1,108 +1,94 @@
 using UnityEngine;
 
 [RequireComponent(typeof(Rigidbody))]
-public class EnemyController : MonoBehaviour
+public class EnemyController : MonoBehaviour, IDamageable
 {
-    private EnemyFSM fsm;
-
     [Header("Settings")]
     [SerializeField] private float chaseRange = 10f;
     [SerializeField] private float attackRange = 3f;
-    [SerializeField] private float moveSpeed = 5f;
     [SerializeField] private Transform[] patrolPoints;
 
+    [Header("Health")]
+    [SerializeField] private float maxHealth = 100f;
+    [SerializeField] private float impactThreshold = 1f;
+    [SerializeField] private float impactDamageMultiplier = 10f;
+
+    private EnemyFSM fsm;
+    private EnemyAttack enemyAttack;
+    private EnemyMovement enemyMovement;
     private Rigidbody rb;
     private Transform target;
+
+    private float currentHealth;
+    private int magnetizeCount = 0;
+    private int lastPatrolIndex = -1;
     private int currentPatrolIndex = 0;
-    private bool isMagnetized = false;
+
+    private void Start()
+    {
+        fsm.ChangeState(EnemyState.Patrol);
+    }
 
     private void Awake()
     {
+        currentHealth = maxHealth;
+
         rb = GetComponent<Rigidbody>();
+        enemyAttack = GetComponent<EnemyAttack>();
+        enemyMovement = GetComponent<EnemyMovement>();
+
         fsm = new EnemyFSM(this);
 
         GameObject player = GameObject.FindWithTag("Player");
         if (player != null)
+        {
             target = player.transform;
+
+            Collider playerCollider = player.GetComponent<Collider>();
+            Collider enemyCollider = GetComponent<Collider>();
+            if (playerCollider != null && enemyCollider != null)
+            {
+                Physics.IgnoreCollision(enemyCollider, playerCollider);
+            }
+        }
     }
 
     private void Update()
     {
         fsm.OnUpdate();
+
+        if (fsm.CurrentStateType != EnemyState.Magnetized)
+        {
+            Debug.DrawRay(transform.position, rb.velocity, Color.cyan, 0.1f);
+        }
     }
 
     private void OnCollisionEnter(Collision collision)
     {
-        if (fsm.CurrentStateType != EnemyState.Magnetized)
+        if (Utilities.CheckLayerInMask(LayerMask.GetMask("Player"), collision.gameObject.layer))
             return;
 
-        if (Utilities.CheckLayerInMask(LayerMask.GetMask("Projectile"), collision.gameObject.layer))
-            return;
+        float impactForce = collision.relativeVelocity.magnitude;
 
-        Destroy(gameObject);
-    }
-
-    public void Magnetize()
-    {
-        if (!isMagnetized)
+        if (impactForce >= impactThreshold)
         {
-            isMagnetized = true;
-            fsm.EnterMagnetizedState();
+            float damage = impactForce * impactDamageMultiplier;
+            TakeDamage(damage);
+            Debug.Log($"[DAMAGE] {name} recibió {damage} por colisión con {collision.gameObject.name}");
+        }
+
+        if (fsm.CurrentStateType == EnemyState.Magnetized &&
+            !Utilities.CheckLayerInMask(LayerMask.GetMask("Projectile"), collision.gameObject.layer))
+        {
+            Debug.Log($"[MAGNET] {name} colisionó mientras estaba magnetizado");
+            enemyMovement.RegisterMagnetizedCollision();
         }
     }
 
-    public void Unmagnetize()
-    {
-        if (isMagnetized)
-        {
-            isMagnetized = false;
-            fsm.ExitMagnetizedState();
-        }
-    }
+    #region FSM
 
-    public bool IsMagnetized() => isMagnetized;
     public Transform GetTarget() => target;
-    public float GetChaseRange() => chaseRange;
-    public float GetAttackRange() => attackRange;
-    public float GetMoveSpeed() => moveSpeed;
-    public Rigidbody GetRigidbody() => rb;
-
-    public void MoveTowards(Vector3 targetPosition)
-    {
-        if (isMagnetized) return;
-
-        Vector3 direction = (targetPosition - transform.position).normalized;
-        rb.MovePosition(transform.position + direction * moveSpeed * Time.deltaTime);
-    }
-
-    public void RotateTowardsTarget()
-    {
-        if (target == null) return;
-
-        Vector3 direction = (target.position - transform.position).normalized;
-        direction.y = 0f;
-        if (direction == Vector3.zero) return;
-
-        Quaternion targetRotation = Quaternion.LookRotation(direction);
-        transform.rotation = Quaternion.Lerp(transform.rotation, targetRotation, Time.deltaTime * 5f);
-    }
-
-    public Transform GetCurrentPatrolPoint()
-    {
-        if (patrolPoints == null || patrolPoints.Length == 0) return null;
-        return patrolPoints[currentPatrolIndex];
-    }
-
-    public void MoveToNextPatrolPoint()
-    {
-        if (patrolPoints == null || patrolPoints.Length == 0) return;
-        currentPatrolIndex = (currentPatrolIndex + 1) % patrolPoints.Length;
-    }
-
-    public void AttackPlayer()
-    {
-        Debug.Log("Enemy attacks player!");
-    }
+    public EnemyAttack GetAttackModule() => enemyAttack;
 
     public bool IsPlayerInChaseRange()
     {
@@ -115,4 +101,92 @@ public class EnemyController : MonoBehaviour
         if (target == null) return false;
         return Vector3.Distance(transform.position, target.position) <= attackRange;
     }
+
+    public void AttackPlayer()
+    {
+        enemyAttack?.TryAttack();
+    }
+
+    #endregion
+
+    #region Magnetism
+
+    public void SetMagnetize(bool active)
+    {
+        if (active)
+            magnetizeCount++;
+        else
+            magnetizeCount = Mathf.Max(0, magnetizeCount - 1);
+    }
+
+    public bool IsMagnetized() => magnetizeCount > 0;
+
+    public bool HasCollidedWhileMagnetized() => enemyMovement != null && enemyMovement.UpdateHeight(0.2f);
+    public void ResetCollisionFlag() => enemyMovement?.ResetMagnetizedCollision();
+
+    public void ApplyRepulsion(Vector3 direction, float force)
+    {
+        enemyMovement?.ApplyRepulsion(direction, force);
+        fsm.ChangeState(EnemyState.Magnetized);
+        SetMagnetize(true);
+    }
+
+    public bool UpdateHeight(float threshold = 0.1f)
+    {
+        return enemyMovement != null && enemyMovement.UpdateHeight(threshold);
+    }
+
+    #endregion
+
+    #region Patrol System
+
+    public Transform GetCurrentPatrolPoint()
+    {
+        if (patrolPoints == null || patrolPoints.Length == 0)
+            return null;
+
+        return patrolPoints[currentPatrolIndex];
+    }
+
+    public void MoveToRandomPatrolPoint()
+    {
+        if (patrolPoints == null || patrolPoints.Length < 2) return;
+
+        int newIndex = currentPatrolIndex;
+        int maxTries = 10;
+        int tries = 0;
+
+        while ((newIndex == currentPatrolIndex || Vector3.Distance(transform.position, patrolPoints[newIndex].position) < 1.5f)
+               && tries < maxTries)
+        {
+            newIndex = Random.Range(0, patrolPoints.Length);
+            tries++;
+        }
+
+        lastPatrolIndex = currentPatrolIndex;
+        currentPatrolIndex = newIndex;
+    }
+
+    #endregion
+
+    #region Life System
+
+    public void TakeDamage(float amount)
+    {
+        currentHealth -= amount;
+        Debug.Log($"[DAMAGE] {name} took {amount} damage. Remaining: {currentHealth}");
+
+        if (currentHealth <= 0)
+        {
+            Die();
+        }
+    }
+
+    private void Die()
+    {
+        Debug.Log($"[DAMAGE] {name} has died");
+        Destroy(gameObject);
+    }
+
+    #endregion
 }

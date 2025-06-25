@@ -56,7 +56,7 @@ GameObject:
   - component: {fileID: 6495421507960502518}
   - component: {fileID: 4634623699853602801}
   - component: {fileID: 6432964770231256566}
-  - component: {fileID: 4993328050339790040}
+  - component: {fileID: 8188792917060569480}
   - component: {fileID: 362758765821419854}
   m_Layer: 9
   m_Name: Controller
@@ -96,7 +96,7 @@ MonoBehaviour:
   cameraHolder: {fileID: 2393461219327223477}
   shooter: {fileID: 362758765821419854}
   movement: {fileID: 6432964770231256566}
-  look: {fileID: 4993328050339790040}
+  look: {fileID: 8188792917060569480}
 --- !u!114 &6432964770231256566
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -120,7 +120,7 @@ MonoBehaviour:
     m_Bits: 64
   maxSlopeAngle: 40
   slopeCheckDistance: 5
---- !u!114 &4993328050339790040
+--- !u!114 &8188792917060569480
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -129,7 +129,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 1299954960486191875}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7ffca544f6f703b478c14db41e737e30, type: 3}
+  m_Script: {fileID: 11500000, guid: 55ffcdc70ca20284aa0bf80947297209, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   mouseSensitivity: 200
@@ -226,6 +226,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 190118111668965067}
+  - component: {fileID: 2442239108688718085}
   - component: {fileID: 5232643096518308169}
   - component: {fileID: 3827588644914233385}
   m_Layer: 9
@@ -254,6 +255,19 @@ Transform:
   - {fileID: 5344219100833535222}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2442239108688718085
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6434455183562041582}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 94d112e42a3adb748b591377dfcb5563, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  maxHealth: 100
 --- !u!136 &5232643096518308169
 CapsuleCollider:
   m_ObjectHideFlags: 0

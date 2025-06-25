@@ -13,32 +13,41 @@ public class PatrolEnemyState : BaseEnemyState
     {
         Debug.Log("Enemy entered PATROL state");
 
-        var controller = context.GetController();
+        movement.StopMovement();
 
-        controller.MoveToNextPatrolPoint();
+        controller.MoveToRandomPatrolPoint();
         currentPatrolTarget = controller.GetCurrentPatrolPoint();
     }
 
     public override void OnUpdate()
     {
-        var controller = context.GetController();
-
         if (controller.IsPlayerInChaseRange())
         {
             context.ChangeState(EnemyState.Chase);
             return;
         }
 
-        if (currentPatrolTarget == null) return;
+        if (controller.IsMagnetized())
+        {
+            context.ChangeState(EnemyState.Magnetized);
+            return;
+        }
 
-        controller.MoveTowards(currentPatrolTarget.position);
+        if (currentPatrolTarget == null)
+            return;
 
         float distance = Vector3.Distance(controller.transform.position, currentPatrolTarget.position);
+
         if (distance < 0.5f)
         {
-            controller.MoveToNextPatrolPoint();
+            controller.MoveToRandomPatrolPoint();
             currentPatrolTarget = controller.GetCurrentPatrolPoint();
+            return;
         }
+
+        movement.MoveTowards(currentPatrolTarget.position);
+        movement.RotateTowards(currentPatrolTarget.position);
+        Debug.DrawLine(controller.transform.position, currentPatrolTarget.position, Color.green, 0.1f);
     }
 
     public override void OnExit() { }

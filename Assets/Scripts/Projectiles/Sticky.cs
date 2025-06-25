@@ -9,35 +9,33 @@ public class Sticky : MonoBehaviour, IPooleable
     [SerializeField] private float collisionDelay = 0.05f;
 
     private Rigidbody rb;
-    private Rigidbody targetRb = null;
     private Magnet magnet;
+    private FixedJoint fixedJoint;
     private Vector3 launchDirection;
     private bool isDeactivating = false;
     private bool hasImpacted = false;
-    private bool wasKinematic = false;
     private float spawnTime;
 
     private void Awake()
     {
         rb = GetComponent<Rigidbody>();
         magnet = GetComponent<Magnet>();
-
-        if (magnet != null)
-            magnet.SetStickyOwner(this);
     }
 
     public void Launch(Vector3 direction)
     {
         hasImpacted = false;
-        isDeactivating = false;
+        spawnTime = Time.time;
+
         launchDirection = direction.normalized;
         rb.velocity = launchDirection * speed;
-        spawnTime = Time.time;
     }
 
     private void Update()
     {
-        if (!hasImpacted && Time.time - spawnTime > lifetime)
+        if (hasImpacted) return;
+
+        if (Time.time - spawnTime > lifetime)
         {
             Deactivate();
         }
@@ -48,113 +46,101 @@ public class Sticky : MonoBehaviour, IPooleable
         if (hasImpacted || Time.time - spawnTime < collisionDelay)
             return;
 
+        hasImpacted = true;
         rb.velocity = Vector3.zero;
-        rb.angularVelocity = Vector3.zero;
         rb.isKinematic = true;
 
+        Transform hitTransform = collision.transform;
         transform.position = collision.contacts[0].point;
-        transform.SetParent(collision.transform);
-        transform.rotation = Quaternion.LookRotation(-collision.contacts[0].normal);
 
-        targetRb = collision.rigidbody;
+        Rigidbody otherRb = hitTransform.GetComponentInParent<Rigidbody>();
 
-        if (targetRb != null)
+        if (otherRb != null && otherRb != rb)
         {
-            if (!collision.transform.TryGetComponent<EnemyController>(out var enemy))
-            {
-                
-                wasKinematic = targetRb.isKinematic;
-                if (!targetRb.isKinematic)
-                    targetRb.isKinematic = true;
-            }
+            fixedJoint = gameObject.AddComponent<FixedJoint>();
+            fixedJoint.connectedBody = otherRb;
+            fixedJoint.enableCollision = false;
+        }
+        else
+        {
+            // Adherir al transform si no tiene Rigidbody
+            transform.SetParent(hitTransform);
         }
 
-        if (collision.transform.TryGetComponent<Magnet>(out var otherMagnet))
+        magnet?.ActivateMagnet();
+
+        Magnet otherMagnet = hitTransform.GetComponent<Magnet>();
+        if (otherMagnet != null)
         {
-            otherMagnet.IgnoreMagnet(magnet);
             magnet.IgnoreMagnet(otherMagnet);
         }
 
-        rb.isKinematic = true;
-
-        if (magnet != null)
-            magnet.ActivateMagnet();
-
+        // Se auto-desactiva después del tiempo de vida
         Invoke(nameof(Deactivate), lifetime);
     }
 
-    private void Deactivate()
+    public void Deactivate()
     {
+        if (isDeactivating) return;
         isDeactivating = true;
-        hasImpacted = false;
 
-        if (magnet != null)
-            magnet.DeactivateMagnet();
-
-        if (targetRb != null)
-        {
-            targetRb.isKinematic = wasKinematic;
-            targetRb = null;
-            wasKinematic = false;
-        }
-
+        magnet?.DeactivateMagnet();
         transform.SetParent(null);
-        rb.isKinematic = false;
 
-        magnet.RemoveAllMagnets();
+        if (fixedJoint != null)
+            Destroy(fixedJoint);
+
+        rb.isKinematic = false;
+        rb.velocity = Vector3.zero;
 
         PoolManager.Instance.ReturnToPool(this);
     }
 
-    public bool IsDeactivating()
-    {
-        return isDeactivating;
-    }
-
-    public void SetCharge(MagneticChargeType newCharge)
-    {
-        if (magnet != null)
-            magnet.SetCharge(newCharge);
-    }
-
     public void GetObjectFromPool()
+    {
+        gameObject.SetActive(true);
+    }
+
+    public void ReturnObjectToPool()
+    {
+        gameObject.SetActive(false);
+    }
+
+    public void ResetToDefault()
     {
         hasImpacted = false;
         isDeactivating = false;
 
-        if (targetRb != null)
-        {
-            targetRb.isKinematic = wasKinematic;
-            targetRb = null;
-            wasKinematic = false;
-        }
-
         rb.isKinematic = false;
         rb.velocity = Vector3.zero;
         rb.angularVelocity = Vector3.zero;
+
         transform.SetParent(null);
 
-        if (magnet != null)
-        {
-            magnet.SetCharge(MagneticChargeType.None);
-            magnet.DeactivateMagnet();
-        }
-    }
+        if (fixedJoint != null)
+            Destroy(fixedJoint);
 
-    public void ReturnObjectToPool() { }
-
-    public void ResetToDefault()
-    {
-        GetObjectFromPool();
+        magnet?.DeactivateMagnet();
+        magnet?.RemoveAllMagnets();
     }
 
     public void Disable()
     {
+        CancelInvoke();
         rb.velocity = Vector3.zero;
         rb.angularVelocity = Vector3.zero;
-        rb.isKinematic = true;
+        rb.isKinematic = false;
+        transform.SetParent(null);
 
+        if (fixedJoint != null)
+            Destroy(fixedJoint);
+
+        gameObject.SetActive(false);
+    }
+
+    internal void SetCharge(MagneticChargeType currentCharge)
+    {
         if (magnet != null)
-            magnet.DeactivateMagnet();
+            magnet.SetCharge(currentCharge);
     }
 }

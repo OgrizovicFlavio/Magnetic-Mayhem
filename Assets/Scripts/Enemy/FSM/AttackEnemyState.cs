@@ -10,15 +10,23 @@ public class AttackEnemyState : BaseEnemyState
     public override void OnEnter()
     {
         Debug.Log("Enemy entered ATTACK state");
+        movement.StopMovement();
     }
 
     public override void OnUpdate()
     {
-        var controller = context.GetController();
+        if (controller.IsMagnetized())
+        {
+            context.ChangeState(EnemyState.Magnetized);
+            return;
+        }
 
-        controller.AttackPlayer();
+        if (!attack.IsRetreating())
+        {
+            attack.TryAttack();
+        }
 
-        if (!controller.IsPlayerInAttackRange())
+        if (!attack.IsRetreating() && !controller.IsPlayerInAttackRange())
         {
             if (controller.IsPlayerInChaseRange())
                 context.ChangeState(EnemyState.Chase);
