@@ -184,7 +184,6 @@ public class EnemyController : MonoBehaviour, IDamageable
 
     private void Die()
     {
-        Debug.Log($"[DAMAGE] {name} has died");
         Destroy(gameObject);
     }
 

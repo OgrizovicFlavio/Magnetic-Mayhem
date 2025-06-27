@@ -78,6 +78,15 @@ public class PlayerShoot : MonoBehaviour
 
         Ray ray = new Ray(firePoint.position, cameraTransform.forward);
         Vector3 dir = ray.direction;
+        Vector3 targetPoint = ray.origin + ray.direction * maxDistance;
+
+        // Hacer raycast para saber si impacta algo antes del maxDistance
+        if (Physics.Raycast(ray, out var hit, maxDistance, raycastMask))
+        {
+            targetPoint = hit.point;
+        }
+
+        dir = (targetPoint - firePoint.position).normalized;
 
         Sticky sticky = PoolManager.Instance.Get<Sticky>(firePoint.position, Quaternion.LookRotation(dir));
         if (sticky != null)

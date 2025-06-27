@@ -43,7 +43,10 @@ public class Sticky : MonoBehaviour, IPooleable
 
     private void OnCollisionEnter(Collision collision)
     {
-        if (hasImpacted || Time.time - spawnTime < collisionDelay)
+        if (hasImpacted) 
+            return;
+
+        if (Time.time - spawnTime < collisionDelay && LayerMask.NameToLayer("Ground") != collision.gameObject.layer)
             return;
 
         hasImpacted = true;

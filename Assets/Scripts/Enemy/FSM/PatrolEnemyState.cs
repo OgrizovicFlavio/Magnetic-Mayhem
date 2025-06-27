@@ -11,8 +11,6 @@ public class PatrolEnemyState : BaseEnemyState
 
     public override void OnEnter()
     {
-        Debug.Log("Enemy entered PATROL state");
-
         movement.StopMovement();
 
         controller.MoveToRandomPatrolPoint();

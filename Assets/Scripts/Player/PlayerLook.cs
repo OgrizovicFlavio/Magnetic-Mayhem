@@ -23,18 +23,13 @@ public class PlayerLook : MonoBehaviour
     public void Rotate(Vector2 lookInput)
     {
         if (bodyTransform == null || cameraHolderTransform == null)
-        {
-            Debug.LogWarning("Look: Referencias no inicializadas.");
             return;
-        }
 
         float mouseX = lookInput.x * mouseSensitivity * Time.deltaTime;
         float mouseY = lookInput.y * mouseSensitivity * Time.deltaTime;
 
-        // Rotación horizontal (Y)
         bodyTransform.Rotate(Vector3.up * mouseX);
 
-        // Rotación vertical (X)
         verticalLookRotation -= mouseY;
         verticalLookRotation = Mathf.Clamp(verticalLookRotation, minVerticalAngle, maxVerticalAngle);
         cameraHolderTransform.localEulerAngles = new Vector3(verticalLookRotation, 0f, 0f);
