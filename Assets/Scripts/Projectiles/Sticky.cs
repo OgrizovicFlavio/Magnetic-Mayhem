@@ -43,7 +43,10 @@ public class Sticky : MonoBehaviour, IPooleable
 
     private void OnCollisionEnter(Collision collision)
     {
-        if (hasImpacted) 
+        if (hasImpacted)
+            return;
+
+        if (collision.gameObject.layer == LayerMask.NameToLayer("Portal"))
             return;
 
         if (Time.time - spawnTime < collisionDelay && LayerMask.NameToLayer("Ground") != collision.gameObject.layer)
