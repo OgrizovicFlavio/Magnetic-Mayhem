@@ -14,9 +14,14 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
 
     private SceneReferences main;
     private SceneReferences current;
+    private Vector3 returnPosition;
+    private Quaternion returnRotation;
 
     private void Start()
     {
+        if (playerRoot == null)
+            playerRoot = GameObject.FindWithTag("Player");
+
         PoolManager.Instance.InitializePool(stickyMagnetProjectile, 20);
     }
 
@@ -37,21 +42,24 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
         else
         {
             current = obj;
-
-            playerRoot.transform.position = current.previousState.position;
-            playerRoot.transform.rotation = current.previousState.rotation;
+            playerRoot.transform.position = current.returnPoint.position;
+            playerRoot.transform.rotation = current.returnPoint.rotation;
         }
     }
 
-    public void LoadScene(string newSceneName)
+    public void LoadScene(string newSceneName, Transform returnPoint)
     {
-        main.previousState.position = playerRoot.transform.position;
-        main.previousState.rotation = playerRoot.transform.rotation;
+        returnPosition = returnPoint.position;
+        returnRotation = returnPoint.rotation;
+
+        main.returnPoint.position = playerRoot.transform.position;
+        main.returnPoint.rotation = playerRoot.transform.rotation;
 
         sceneToLoad = newSceneName;
 
-        CustomSceneManager.OnLoadedScene += CustomSceneManager_OnLoadedScene;
+        main.SetActiveGameObjects(false);
 
+        CustomSceneManager.OnLoadedScene += CustomSceneManager_OnLoadedScene;
         CustomSceneManager.Instance.ChangeSceneTo(newSceneName);
     }
 
@@ -64,23 +72,23 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
 
     public void UnloadScene()
     {
-        playerRoot.transform.position = main.previousState.position;
-        playerRoot.transform.rotation = main.previousState.rotation;
+        SceneReferences.OnLoadedScene -= SceneReferences_OnLoadedScene;
 
-        SetAsActiveScene(sceneToLoad);
         main.SetActiveGameObjects(true);
 
-        Scene gameplay = SceneManager.GetSceneByName(worldScene);
-        SceneManager.SetActiveScene(gameplay);
+        playerRoot.transform.position = returnPosition;
+        playerRoot.transform.rotation = returnRotation;
+
+        Scene world = SceneManager.GetSceneByName(worldScene);
+        SceneManager.SetActiveScene(world);
+
         SceneManager.UnloadSceneAsync(sceneToLoad);
     }
 
-    private void SetAsActiveScene (string sceneName)
+    private void SetAsActiveScene(string sceneName)
     {
         Scene newScene = SceneManager.GetSceneByName(sceneName);
         SceneManager.SetActiveScene(newScene);
-
-        main.SetActiveGameObjects(false);
     }
 
     public Transform GetPlayerRoot()

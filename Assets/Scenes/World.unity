@@ -1161,7 +1161,7 @@ GameObject:
   m_Component:
   - component: {fileID: 413472844}
   m_Layer: 0
-  m_Name: World
+  m_Name: Environment
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2034,6 +2034,10 @@ PrefabInstance:
       propertyPath: sceneToLoad
       value: Area 1
       objectReference: {fileID: 0}
+    - target: {fileID: 1195040408210122492, guid: a4f5d4b2af55e4e4d8637b2a8848162f, type: 3}
+      propertyPath: isExitPortal
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 2037097688177267524, guid: a4f5d4b2af55e4e4d8637b2a8848162f, type: 3}
       propertyPath: m_Layer
       value: 0
@@ -2268,7 +2272,7 @@ MonoBehaviour:
   dontDestroyOnLoad: 1
   image: {fileID: 1884385640}
   background: {fileID: 2137331341}
-  maxTime: 1
+  maxTime: 2
 --- !u!224 &890305683
 RectTransform:
   m_ObjectHideFlags: 0
@@ -5629,7 +5633,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8e0b3c57c08fc044c8c0de3ba30770c3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  <previousState>k__BackingField: {fileID: 842016748}
+  <returnPoint>k__BackingField: {fileID: 842016748}
   <gameObjects>k__BackingField:
   - {fileID: 413472843}
 --- !u!1 &2073413610

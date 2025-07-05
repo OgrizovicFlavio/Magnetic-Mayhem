@@ -951,7 +951,7 @@ PrefabInstance:
     - target: {fileID: 1195040408210122492, guid: a4f5d4b2af55e4e4d8637b2a8848162f, type: 3}
       propertyPath: returnPoint
       value: 
-      objectReference: {fileID: 0}
+      objectReference: {fileID: 1419278413}
     - target: {fileID: 1195040408210122492, guid: a4f5d4b2af55e4e4d8637b2a8848162f, type: 3}
       propertyPath: sceneToLoad
       value: World
@@ -959,6 +959,30 @@ PrefabInstance:
     - target: {fileID: 1195040408210122492, guid: a4f5d4b2af55e4e4d8637b2a8848162f, type: 3}
       propertyPath: isExitPortal
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3900753818009760331, guid: a4f5d4b2af55e4e4d8637b2a8848162f, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3900753818009760331, guid: a4f5d4b2af55e4e4d8637b2a8848162f, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3900753818009760331, guid: a4f5d4b2af55e4e4d8637b2a8848162f, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: -3
+      objectReference: {fileID: 0}
+    - target: {fileID: 3900753818009760331, guid: a4f5d4b2af55e4e4d8637b2a8848162f, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3900753818009760331, guid: a4f5d4b2af55e4e4d8637b2a8848162f, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3900753818009760331, guid: a4f5d4b2af55e4e4d8637b2a8848162f, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7489420763876559333, guid: a4f5d4b2af55e4e4d8637b2a8848162f, type: 3}
       propertyPath: m_LocalPosition.x
@@ -1002,7 +1026,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7828404238315967327, guid: a4f5d4b2af55e4e4d8637b2a8848162f, type: 3}
       propertyPath: m_Name
-      value: CrossPlains_Gate
+      value: Gate
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -1058,9 +1082,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8e0b3c57c08fc044c8c0de3ba30770c3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  <previousState>k__BackingField: {fileID: 1835398868}
+  <returnPoint>k__BackingField: {fileID: 1835398868}
   <gameObjects>k__BackingField:
   - {fileID: 362209770}
+--- !u!4 &1419278413 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 3900753818009760331, guid: a4f5d4b2af55e4e4d8637b2a8848162f, type: 3}
+  m_PrefabInstance: {fileID: 1143124804}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1835398867
 GameObject:
   m_ObjectHideFlags: 0

@@ -5,9 +5,9 @@ using UnityEngine;
 public class SceneReferences : MonoBehaviour
 {
     public static event Action<SceneReferences> OnLoadedScene;
-    [field: SerializeField] public Transform previousState {  get; private set; }
 
-    [field: SerializeField] public List <GameObject> gameObjects { get; private set; } = new List <GameObject>();
+    [field: SerializeField] public Transform returnPoint { get; private set; }
+    [field: SerializeField] public List<GameObject> gameObjects { get; private set; } = new List<GameObject>();
 
     private void Start()
     {

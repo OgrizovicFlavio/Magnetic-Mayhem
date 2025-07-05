@@ -91,28 +91,8 @@ public class CustomSceneManager : MonoBehaviourSingleton<CustomSceneManager>
 
     private void Operation_Completed(AsyncOperation operation)
     {
+        Debug.Log("COMPLETA!");
         OnLoadedScene?.Invoke();
-    }
-
-    public void UnloadWithTransition(string sceneName, Action onComplete)
-    {
-        if (!gameObject.activeSelf)
-            gameObject.SetActive(true);
-
-        if (loadingScene != null)
-        {
-            StopCoroutine(loadingScene);
-            loadingScene = null;
-        }
-
-        if (background != null)
-            background.SetActive(true);
-
-        image.fillAmount = 0f;
-
-        loadingScene = UnloadScene(sceneName, onComplete);
-        Time.timeScale = 0;
-        StartCoroutine(loadingScene);
     }
 
     private IEnumerator UnloadScene(string sceneName, Action onComplete)

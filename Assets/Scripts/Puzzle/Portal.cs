@@ -16,9 +16,7 @@ public class Portal : MonoBehaviour
     {
         if (playerRoot == null)
         {
-            playerRoot = GameManager.Instance.GetPlayerRoot();
-            if (playerRoot == null)
-                Debug.LogWarning("[Portal] No se encontró el PlayerRoot.");
+            playerRoot = GameManager.Instance.GetPlayerRoot();          
         }
     }
 
@@ -44,9 +42,13 @@ public class Portal : MonoBehaviour
         if (canInteract && Input.GetKeyDown(KeyCode.E))
         {
             if (isExitPortal)
+            {
                 GameManager.Instance.UnloadScene();
+            }
             else
-                GameManager.Instance.LoadScene(sceneToLoad);
+            {
+                GameManager.Instance.LoadScene(sceneToLoad, returnPoint);
+            }
         }
     }
 }
