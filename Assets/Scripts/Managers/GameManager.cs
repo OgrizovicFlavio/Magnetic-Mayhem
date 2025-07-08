@@ -1,10 +1,12 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using static UnityEngine.GraphicsBuffer;
 
 public class GameManager : MonoBehaviourSingleton<GameManager>
 {
-    private Vector3 previousPosition = Vector3.zero;
+    public static event System.Action<GameObject> OnPlayerRegistered;
 
+    [Header("Settings")]
     [SerializeField] private GameObject playerRoot;
     [SerializeField] private string worldScene;
     [SerializeField] private string sceneToLoad;
@@ -12,50 +14,22 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
     [Header("Prefabs")]
     [SerializeField] private Sticky stickyMagnetProjectile;
 
+    private string loadedAreaSceneName;
     private SceneReferences main;
     private SceneReferences current;
-    private Vector3 returnPosition;
-    private Quaternion returnRotation;
 
     private void Start()
     {
-        if (playerRoot == null)
-            playerRoot = GameObject.FindWithTag("Player");
-
         PoolManager.Instance.InitializePool(stickyMagnetProjectile, 20);
     }
 
-    protected override void OnAwaken()
+    public void GoToArea(string newSceneName)
     {
-        SceneReferences.OnLoadedScene += SceneReferences_OnLoadedScene;
-    }
-
-    protected override void OnDestroyed()
-    {
-        SceneReferences.OnLoadedScene -= SceneReferences_OnLoadedScene;
-    }
-
-    private void SceneReferences_OnLoadedScene(SceneReferences obj)
-    {
-        if (main == null)
-            main = obj;
-        else
-        {
-            current = obj;
-            playerRoot.transform.position = current.returnPoint.position;
-            playerRoot.transform.rotation = current.returnPoint.rotation;
-        }
-    }
-
-    public void LoadScene(string newSceneName, Transform returnPoint)
-    {
-        returnPosition = returnPoint.position;
-        returnRotation = returnPoint.rotation;
-
-        main.returnPoint.position = playerRoot.transform.position;
-        main.returnPoint.rotation = playerRoot.transform.rotation;
+        main.SpawnPoint.position = playerRoot.transform.position;
+        main.SpawnPoint.rotation = playerRoot.transform.rotation;
 
         sceneToLoad = newSceneName;
+        loadedAreaSceneName = newSceneName;
 
         main.SetActiveGameObjects(false);
 
@@ -66,23 +40,54 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
     private void CustomSceneManager_OnLoadedScene()
     {
         CustomSceneManager.OnLoadedScene -= CustomSceneManager_OnLoadedScene;
-
         SetAsActiveScene(sceneToLoad);
     }
 
-    public void UnloadScene()
+    public void GoToMain()
     {
-        SceneReferences.OnLoadedScene -= SceneReferences_OnLoadedScene;
-
         main.SetActiveGameObjects(true);
 
-        playerRoot.transform.position = returnPosition;
-        playerRoot.transform.rotation = returnRotation;
+        TeleportPlayerTo(main.SpawnPoint);
 
         Scene world = SceneManager.GetSceneByName(worldScene);
         SceneManager.SetActiveScene(world);
 
-        SceneManager.UnloadSceneAsync(sceneToLoad);
+        if (!string.IsNullOrEmpty(loadedAreaSceneName))
+        {
+            SceneManager.UnloadSceneAsync(loadedAreaSceneName);
+            loadedAreaSceneName = null;
+        }
+    }
+
+    public void MovePlayer(SceneReferences sceneReferences)
+    {
+        if (main == null)
+        {
+            main = sceneReferences;
+            current = sceneReferences;
+        }
+        else
+        {
+            current = sceneReferences;
+            TeleportPlayerTo(current.SpawnPoint);
+        }
+    }
+
+    private void TeleportPlayerTo(Transform target)
+    {
+        Rigidbody rb = playerRoot.GetComponent<Rigidbody>();
+        if (rb != null)
+        {
+            rb.velocity = Vector3.zero;
+            rb.angularVelocity = Vector3.zero;
+
+            rb.position = target.position;
+            rb.rotation = target.rotation;
+        }
+        else
+        {
+            playerRoot.transform.SetPositionAndRotation(target.position, target.rotation);
+        }
     }
 
     private void SetAsActiveScene(string sceneName)
@@ -91,8 +96,9 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
         SceneManager.SetActiveScene(newScene);
     }
 
-    public Transform GetPlayerRoot()
+    public void RegisterPlayer(GameObject player)
     {
-        return playerRoot != null ? playerRoot.transform : null;
+        playerRoot = player;
+        OnPlayerRegistered?.Invoke(player);
     }
 }

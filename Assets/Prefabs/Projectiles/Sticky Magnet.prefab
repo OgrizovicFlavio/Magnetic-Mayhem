@@ -218,6 +218,9 @@ MonoBehaviour:
   repulsionForce: 10
   magnetDetector: {fileID: 8757778419485670589}
   magnetType: 1
+  redMetalMaterial: {fileID: 2100000, guid: cd4b5abbe82230346aa29f27ed1c8216, type: 2}
+  blueMetalMaterial: {fileID: 2100000, guid: cf96c0b7e6c332c4da554418b950bee9, type: 2}
+  neutralMetalMaterial: {fileID: 2100000, guid: 052a7f7838a98714992e0c6c55276179, type: 2}
   visualRenderer: {fileID: 703704830447980998}
 --- !u!54 &1349947290787929735
 Rigidbody:

@@ -49,7 +49,6 @@ public class CustomSceneManager : MonoBehaviourSingleton<CustomSceneManager>
     {
         AsyncOperation operation = SceneManager.LoadSceneAsync(sceneName, LoadSceneMode.Additive);
         operation.allowSceneActivation = false;
-        operation.completed += Operation_Completed;
 
         float onTime = 0f;
         float percentage = 0.9f;
@@ -77,54 +76,17 @@ public class CustomSceneManager : MonoBehaviourSingleton<CustomSceneManager>
 
         gameObject.SetActive(false);
         Time.timeScale = 1;
+
         operation.allowSceneActivation = true;
 
         yield return null;
 
-        operation.completed -= Operation_Completed;
-        loadingScene = null;
         image.fillAmount = 0f;
 
         if (background != null)
             background.SetActive(false);
-    }
 
-    private void Operation_Completed(AsyncOperation operation)
-    {
-        Debug.Log("COMPLETA!");
         OnLoadedScene?.Invoke();
-    }
-
-    private IEnumerator UnloadScene(string sceneName, Action onComplete)
-    {
-        float onTime = 0f;
-        float percentage = 0.9f;
-
-        while (onTime < maxTime * percentage)
-        {
-            onTime += Time.unscaledDeltaTime;
-            image.fillAmount = onTime / maxTime;
-            yield return null;
-        }
-
-        while (onTime < maxTime)
-        {
-            onTime += Time.unscaledDeltaTime * 10f;
-            image.fillAmount = onTime / maxTime;
-            yield return null;
-        }
-
-        image.fillAmount = 1f;
-
-        gameObject.SetActive(false);
-        Time.timeScale = 1;
-        loadingScene = null;
-        image.fillAmount = 0f;
-
-        if (background != null)
-            background.SetActive(false);
-
-        onComplete?.Invoke();
     }
 }
 

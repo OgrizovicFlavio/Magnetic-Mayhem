@@ -23,6 +23,8 @@ public class PlayerController : MonoBehaviour
 
     private void Start()
     {
+        GameManager.Instance.RegisterPlayer(transform.parent.gameObject);
+
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
 

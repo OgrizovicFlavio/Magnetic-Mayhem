@@ -11,8 +11,14 @@ public class Magnet : MonoBehaviour
     [SerializeField] private MagnetDetector magnetDetector;
     [SerializeField] private MagnetType magnetType = MagnetType.Ferrous;
 
+    [Header("Visual Materials")]
+    [SerializeField] private Material redMetalMaterial;
+    [SerializeField] private Material blueMetalMaterial;
+    [SerializeField] private Material neutralMetalMaterial;
+
     [Header("Colors")]
     [SerializeField] private Renderer visualRenderer;
+
     private static readonly Color[] chargeColors = new Color[3]
     {
         Color.gray,
@@ -137,8 +143,14 @@ public class Magnet : MonoBehaviour
         if (visualRenderer == null)
             return;
 
-        block.SetColor("_BaseColor", chargeColors[(int)charge]);
-        visualRenderer.SetPropertyBlock(block);
+        Material selectedMaterial = neutralMetalMaterial;
+
+        if (charge == MagneticChargeType.Positive)
+            selectedMaterial = redMetalMaterial;
+        else if (charge == MagneticChargeType.Negative)
+            selectedMaterial = blueMetalMaterial;
+
+        visualRenderer.material = selectedMaterial;
     }
 
     private void DetectInitialMagnets()
