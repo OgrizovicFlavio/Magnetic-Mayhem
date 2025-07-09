@@ -162,8 +162,8 @@ public class PlayerController : MonoBehaviour
 
     public void ReturnToPlayer()
     {
-        transform.parent = originalBody;
-        transform.localPosition = originalControllerLocalPos;
+        transform.SetParent(originalBody);
+        transform.localPosition = new Vector3(0f, 3f, 0f);
 
         if (transform.parent.TryGetComponent<Rigidbody>(out var propRb))
             propRb.constraints = RigidbodyConstraints.None;
@@ -177,10 +177,10 @@ public class PlayerController : MonoBehaviour
         shooter.enabled = true;
         isControllingProp = false;
 
-        cameraHolder.localPosition = originalCameraLocalPos;
-        cameraHolder.localRotation = originalCameraLocalRot;
+        cameraHolder.SetParent(transform);
+        cameraHolder.localPosition = Vector3.zero;
+        cameraHolder.localRotation = Quaternion.identity;
 
-        cameraTransition?.StartTransition(originalBody);
         mainCamera.cullingMask = defaultCullingMask;
     }
 
