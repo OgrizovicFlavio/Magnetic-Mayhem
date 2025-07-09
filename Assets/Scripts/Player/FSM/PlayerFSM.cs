@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System;
+using UnityEngine;
 
 public class PlayerFSM
 {
@@ -42,6 +43,19 @@ public class PlayerFSM
         if (input.IsInteracting())
             controller.TryPossess();
 
+        if (input.IsShooting())
+        {
+            bool isGrounded = controller.IsGrounded();
+            bool isMoving = IsMoving();
+            bool isIdle = currentState.playerState == PlayerState.Idle;
+
+            if (isGrounded && !isMoving && isIdle)
+            {
+                ChangeState(PlayerState.Shoot);
+                return;
+            }
+        }
+
         currentState?.OnUpdate();
     }
 
@@ -51,11 +65,22 @@ public class PlayerFSM
         currentState = playerStates.Find(s => s.playerState == newState);
 
         if (currentState == null)
-        {
             return;
-        }
 
         currentState.OnEnter();
+    }
+
+    public bool IsMoving()
+    {
+        if (input == null)
+            return false;
+
+        Vector2 moveInput = input.GetMoveInput();
+
+        if (moveInput.sqrMagnitude > 0.01f)
+            return true;
+
+        return false;
     }
 }
 

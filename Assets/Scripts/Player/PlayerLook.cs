@@ -9,20 +9,23 @@ public class PlayerLook : MonoBehaviour
     [SerializeField] private float minVerticalAngle = -40f;
     [SerializeField] private float maxVerticalAngle = 80f;
 
+    private Transform visualTransform;
+    private float visualTurnSpeed = 10f;
     private Transform bodyTransform;
     private Transform cameraHolderTransform;
 
     private float verticalLookRotation = 0f;
 
-    public void Initialize(Transform bodyTransform, Transform cameraHolderTransform)
+    public void Initialize(Transform bodyTransform, Transform cameraHolderTransform, Transform visualTransform)
     {
         this.bodyTransform = bodyTransform;
         this.cameraHolderTransform = cameraHolderTransform;
+        this.visualTransform = visualTransform;
     }
 
     public void Rotate(Vector2 lookInput)
     {
-        if (bodyTransform == null || cameraHolderTransform == null)
+        if (bodyTransform == null || cameraHolderTransform == null || visualTransform == null)
             return;
 
         float mouseX = lookInput.x * mouseSensitivity * Time.deltaTime;
@@ -33,5 +36,17 @@ public class PlayerLook : MonoBehaviour
         verticalLookRotation -= mouseY;
         verticalLookRotation = Mathf.Clamp(verticalLookRotation, minVerticalAngle, maxVerticalAngle);
         cameraHolderTransform.localEulerAngles = new Vector3(verticalLookRotation, 0f, 0f);
+
+        if (visualTransform != null)
+        {
+            Vector3 forward = bodyTransform.forward;
+            Quaternion targetRotation = Quaternion.LookRotation(forward);
+            visualTransform.rotation = Quaternion.Slerp(visualTransform.rotation, targetRotation, Time.deltaTime * visualTurnSpeed);
+        }
+    }
+
+    public void SetVisualTarget(Transform newTarget)
+    {
+        visualTransform = newTarget;
     }
 }

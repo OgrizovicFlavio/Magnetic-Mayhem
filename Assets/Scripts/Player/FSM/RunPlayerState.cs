@@ -9,7 +9,7 @@ public class RunPlayerState : BasePlayerState
 
     public override void OnEnter()
     {
-        
+        fsm.GetController().GetAnimator().SetInteger("State", (int)PlayerState.Run);
     }
 
     public override void OnUpdate()
@@ -27,10 +27,6 @@ public class RunPlayerState : BasePlayerState
         else if (input.IsJumping())
         {
             fsm.ChangeState(PlayerState.Jump);
-        }
-        else if (input.IsShooting())
-        {
-            fsm.ChangeState(PlayerState.Shoot);
         }
     }
 

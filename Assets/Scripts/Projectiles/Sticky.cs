@@ -69,7 +69,6 @@ public class Sticky : MonoBehaviour, IPooleable
         }
         else
         {
-            // Adherir al transform si no tiene Rigidbody
             transform.SetParent(hitTransform);
         }
 
@@ -81,7 +80,6 @@ public class Sticky : MonoBehaviour, IPooleable
             magnet.IgnoreMagnet(otherMagnet);
         }
 
-        // Se auto-desactiva después del tiempo de vida
         Invoke(nameof(Deactivate), lifetime);
     }
 
@@ -99,7 +97,7 @@ public class Sticky : MonoBehaviour, IPooleable
         rb.isKinematic = false;
         rb.velocity = Vector3.zero;
 
-        PoolManager.Instance.ReturnToPool(this);
+        PoolManager.Instance.ReturnToPool((IPooleable)this);
     }
 
     public void GetObjectFromPool()
@@ -120,6 +118,9 @@ public class Sticky : MonoBehaviour, IPooleable
         rb.isKinematic = false;
         rb.velocity = Vector3.zero;
         rb.angularVelocity = Vector3.zero;
+        transform.position = Vector3.zero;
+        transform.rotation = Quaternion.identity;
+        launchDirection = Vector3.zero;
 
         transform.SetParent(null);
 

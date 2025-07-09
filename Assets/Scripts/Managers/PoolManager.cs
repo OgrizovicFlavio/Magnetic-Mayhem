@@ -39,6 +39,7 @@ public class PoolManager : MonoBehaviourSingleton<PoolManager>
         if (pool.ContainsKey(type) && pool[type].Count > 0)
         {
             obj = pool[type].Dequeue();
+            obj.ResetToDefault();
         }
         else if (prefabLookup.ContainsKey(type))
         {
@@ -46,7 +47,6 @@ public class PoolManager : MonoBehaviourSingleton<PoolManager>
         }
         else
         {
-            Debug.LogError($"No prefab registered for {type}");
             return null;
         }
 
@@ -58,15 +58,16 @@ public class PoolManager : MonoBehaviourSingleton<PoolManager>
         return obj as T;
     }
 
-    public void ReturnToPool<T>(T obj) where T : MonoBehaviour, IPooleable
+    public void ReturnToPool(IPooleable obj)
     {
         obj.ReturnObjectToPool();
         obj.Disable();
 
         GameObject go = (obj as MonoBehaviour).gameObject;
+        go.transform.SetParent(transform);
         go.SetActive(false);
 
-        Type type = typeof(T);
+        Type type = obj.GetType();
         if (!pool.ContainsKey(type))
             pool[type] = new Queue<IPooleable>();
 

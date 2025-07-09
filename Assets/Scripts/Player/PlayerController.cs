@@ -5,21 +5,33 @@ public class PlayerController : MonoBehaviour
     [Header("References")]
     [SerializeField] private Transform cameraHolder;
     [SerializeField] private PlayerShoot shooter;
+    [SerializeField] private Transform visualTransform;
 
     [Header("Movement & Look")]
     [SerializeField] private PlayerMovement movement;
     [SerializeField] private PlayerLook look;
 
+    [Header("Animator")]
+    [SerializeField] private Animator animator;
+
+    [Header("Camera Culling")]
+    [SerializeField] private Camera mainCamera;
+    [SerializeField] private LayerMask playerBody;
+
     private PlayerFSM playerFSM;
     private Rigidbody rb;
     private Rigidbody originalRb;
     private Transform originalBody;
-    private RigidbodyConstraints originalConstraints;
     private CameraTransition cameraTransition;
-    private Vector3 originalCameraPos;
-    private Quaternion originalCameraRot;
+    private RigidbodyConstraints originalConstraints;
+    private LayerMask defaultCullingMask;
+
+    private Vector3 originalCameraLocalPos;
+    private Quaternion originalCameraLocalRot;
+    private Vector3 originalControllerLocalPos;
 
     private bool isControllingProp = false;
+    private bool hasSavedInitialPos = false;
 
     private void Start()
     {
@@ -29,8 +41,7 @@ public class PlayerController : MonoBehaviour
         Cursor.visible = false;
 
         cameraTransition = new CameraTransition(cameraHolder, 0.4f);
-        originalCameraPos = cameraHolder.localPosition;
-        originalCameraRot = cameraHolder.localRotation;
+        defaultCullingMask = mainCamera.cullingMask;
 
         if (transform.parent != null)
             rb = transform.parent.GetComponent<Rigidbody>();
@@ -38,10 +49,21 @@ public class PlayerController : MonoBehaviour
         InputHandler input = new InputHandler();
 
         movement.Initialize(rb, cameraHolder);
-        look.Initialize(transform, cameraHolder);
+        look.Initialize(transform, cameraHolder, visualTransform);
         shooter.Initialize(cameraHolder, this);
         playerFSM = new PlayerFSM(this, input, shooter.Shoot, shooter.ToggleCharge);
         RegisterOriginalBody(transform.parent, rb, playerFSM);
+    }
+
+    private void LateUpdate()
+    {
+        if (!hasSavedInitialPos)
+        {
+            originalCameraLocalPos = cameraHolder.localPosition;
+            originalCameraLocalRot = cameraHolder.localRotation;
+            originalControllerLocalPos = transform.localPosition;
+            hasSavedInitialPos = true;
+        }
     }
 
     private void Update()
@@ -69,6 +91,7 @@ public class PlayerController : MonoBehaviour
             }
             else
             {
+                movement.SetMoveInput(input.GetMoveInput());
                 playerFSM.OnUpdate();
             }
         }
@@ -105,13 +128,28 @@ public class PlayerController : MonoBehaviour
                 if (rb != null)
                     movement.SetRigidbody(rb);
 
+                Transform visual = hit.transform.Find("Visual");
+                if (visual != null)
+                    look.SetVisualTarget(visual);
+
+                Transform receiver = hit.transform.Find("Controller Receiver");
+                if (receiver != null)
+                {
+                    transform.parent = receiver;
+                    transform.localPosition = Vector3.zero;
+                    cameraHolder.localPosition = Vector3.zero;
+                    cameraHolder.localRotation = Quaternion.identity;
+                }
+
                 shooter.enabled = false;
                 isControllingProp = true;
+                mainCamera.cullingMask |= playerBody;
             }
         }
     }
 
     public void SetRigidbody(Rigidbody newRb) => rb = newRb;
+    public Animator GetAnimator() => animator;
     public Rigidbody GetRigidbody() => rb;
     public Transform GetCameraHolder() => cameraHolder;
 
@@ -125,7 +163,7 @@ public class PlayerController : MonoBehaviour
     public void ReturnToPlayer()
     {
         transform.parent = originalBody;
-        transform.localPosition = Vector3.zero;
+        transform.localPosition = originalControllerLocalPos;
 
         if (transform.parent.TryGetComponent<Rigidbody>(out var propRb))
             propRb.constraints = RigidbodyConstraints.None;
@@ -134,9 +172,20 @@ public class PlayerController : MonoBehaviour
         rb.constraints = originalConstraints;
         movement.SetRigidbody(originalRb);
 
+        look.SetVisualTarget(visualTransform);
+
         shooter.enabled = true;
         isControllingProp = false;
 
+        cameraHolder.localPosition = originalCameraLocalPos;
+        cameraHolder.localRotation = originalCameraLocalRot;
+
         cameraTransition?.StartTransition(originalBody);
+        mainCamera.cullingMask = defaultCullingMask;
+    }
+
+    public bool IsGrounded()
+    {
+        return movement.IsGrounded();
     }
 }

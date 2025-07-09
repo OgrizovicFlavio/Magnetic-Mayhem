@@ -8,18 +8,14 @@ public class Controllable : MonoBehaviour, IControllable
     {
         Rigidbody rb = GetComponent<Rigidbody>();
 
-        //Resetear velocidad del controlador antes de tomar control
         controller.GetRigidbody().velocity = Vector3.zero;
 
-        //Reparentar al nuevo cuerpo
         controller.transform.SetParent(transform);
         controller.transform.localPosition = Vector3.zero;
 
-        //Conservar rotación y congelar giros físicos
         rb.constraints = RigidbodyConstraints.FreezeRotation;
         rb.rotation = Quaternion.identity;
 
-        //Transferir Rigidbody al controller
         controller.SetRigidbody(rb);
     }
 

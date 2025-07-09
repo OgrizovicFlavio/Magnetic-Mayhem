@@ -10,8 +10,9 @@ public class PlayerMovement : MonoBehaviour
 
     [Header("Ground Detection")]
     [SerializeField] private Transform groundCheck;
-    [SerializeField] private float groundDistance = 0.3f;
+    [SerializeField] private float groundDistance = 0.5f;
     [SerializeField] private LayerMask groundLayer;
+    [SerializeField] private LayerMask wallLayer;
 
     [Header("Slope Detection")]
     [SerializeField] private float maxSlopeAngle = 40f;
@@ -57,8 +58,13 @@ public class PlayerMovement : MonoBehaviour
         if (!CanMove(moveDir))
             return;
 
-        Vector3 desiredVelocity = new Vector3(moveDir.x * moveSpeed, rb.velocity.y, moveDir.z * moveSpeed);
-        rb.velocity = Vector3.SmoothDamp(rb.velocity, desiredVelocity, ref currentVelocity, 0.1f);
+        Vector3 desiredVelocity = rb.velocity;
+
+        if (isGrounded || !IsTouchingWall())
+        {
+            desiredVelocity = new Vector3(moveDir.x * moveSpeed, rb.velocity.y, moveDir.z * moveSpeed);
+            rb.velocity = Vector3.SmoothDamp(rb.velocity, desiredVelocity, ref currentVelocity, 0.1f);
+        }
     }
 
     public void Jump()
@@ -73,15 +79,31 @@ public class PlayerMovement : MonoBehaviour
         if (rb == null) return;
 
         if (rb.velocity.y < 0)
+        {
             rb.velocity += Vector3.up * Physics.gravity.y * (fallMultiplier - 1) * Time.deltaTime;
-        else if (rb.velocity.y > 0 && !Input.GetKey(KeyCode.Space))
+        }
+        else if (rb.velocity.y > 0)
+        {
             rb.velocity += Vector3.up * Physics.gravity.y * (lowJumpMultiplier - 1) * Time.deltaTime;
+        }
     }
 
     private bool CheckIfGrounded()
     {
-        Collider[] colliders = Physics.OverlapSphere(groundCheck.position, groundDistance, groundLayer);
-        return colliders.Length > 0;
+        bool grounded = Physics.CheckSphere(groundCheck.position, groundDistance, groundLayer);
+        return grounded;
+    }
+
+    private bool IsTouchingWall()
+    {
+        float radius = 0.3f;
+        float castDistance = 0.6f;
+        Vector3 origin = rb.position + Vector3.up * 0.5f;
+
+        return Physics.SphereCast(origin, radius, transform.forward, out _, castDistance, wallLayer)
+            || Physics.SphereCast(origin, radius, -transform.forward, out _, castDistance, wallLayer)
+            || Physics.SphereCast(origin, radius, transform.right, out _, castDistance, wallLayer)
+            || Physics.SphereCast(origin, radius, -transform.right, out _, castDistance, wallLayer);
     }
 
     private bool CanMove(Vector3 moveDir)

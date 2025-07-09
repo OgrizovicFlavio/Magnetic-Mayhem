@@ -9,6 +9,7 @@ public class IdlePlayerState : BasePlayerState
 
     public override void OnEnter()
     {
+        fsm.GetController().GetAnimator().SetInteger("State", (int)PlayerState.Idle);
         fsm.GetController().SetMoveInput(Vector2.zero);
     }
 
@@ -24,10 +25,6 @@ public class IdlePlayerState : BasePlayerState
         else if (input.IsJumping())
         {
             fsm.ChangeState(PlayerState.Jump);
-        }
-        else if (input.IsShooting())
-        {
-            fsm.ChangeState(PlayerState.Shoot);
         }
     }
 
