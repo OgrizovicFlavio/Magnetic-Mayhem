@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 1195040408210122492}
   - component: {fileID: 1506898964529315218}
   m_Layer: 10
-  m_Name: Collider
+  m_Name: Trigger
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -69,8 +69,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 2.8047047, y: 3.9557526, z: 3.4403496}
-  m_Center: {x: -0.0082279425, y: 1.9927217, z: -0.0624519}
+  m_Size: {x: 3, y: 4, z: 3}
+  m_Center: {x: -0.008227945, y: 1.9927217, z: 0.035797}
 --- !u!1 &4901569851530811760
 GameObject:
   m_ObjectHideFlags: 0
@@ -82,6 +82,7 @@ GameObject:
   - component: {fileID: 774976755540994467}
   - component: {fileID: 2676805232764057696}
   - component: {fileID: 5162636574872473210}
+  - component: {fileID: 292854195844058318}
   m_Layer: 10
   m_Name: Visual
   m_TagString: Untagged
@@ -97,13 +98,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4901569851530811760}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0.17364825, z: -0, w: 0.9848078}
-  m_LocalPosition: {x: 0, y: 1.74, z: 0}
-  m_LocalScale: {x: 4.5, y: 4.5, z: 1}
+  m_LocalRotation: {x: -0.03218343, y: -0.21659678, z: -0.016067784, w: 0.9755983}
+  m_LocalPosition: {x: -0, y: 2, z: -0.15}
+  m_LocalScale: {x: 3, y: 4, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 7489420763876559333}
-  m_LocalEulerAnglesHint: {x: 0, y: -20, z: 0}
+  m_LocalEulerAnglesHint: {x: -4, y: -25, z: -1}
 --- !u!33 &2676805232764057696
 MeshFilter:
   m_ObjectHideFlags: 0
@@ -154,6 +155,27 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!65 &292854195844058318
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4901569851530811760}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 1, y: 0.99999994, z: 1.0000001}
+  m_Center: {x: 0, y: 0, z: 0}
 --- !u!1 &7828404238315967327
 GameObject:
   m_ObjectHideFlags: 0

@@ -10,13 +10,10 @@ public class PlayerController : MonoBehaviour
     [Header("Movement & Look")]
     [SerializeField] private PlayerMovement movement;
     [SerializeField] private PlayerLook look;
+    [SerializeField] private Camera mainCamera;
 
     [Header("Animator")]
     [SerializeField] private Animator animator;
-
-    [Header("Camera Culling")]
-    [SerializeField] private Camera mainCamera;
-    [SerializeField] private LayerMask playerBody;
 
     private PlayerFSM playerFSM;
     private Rigidbody rb;
@@ -24,24 +21,23 @@ public class PlayerController : MonoBehaviour
     private Transform originalBody;
     private CameraTransition cameraTransition;
     private RigidbodyConstraints originalConstraints;
-    private LayerMask defaultCullingMask;
-
-    private Vector3 originalCameraLocalPos;
-    private Quaternion originalCameraLocalRot;
-    private Vector3 originalControllerLocalPos;
 
     private bool isControllingProp = false;
-    private bool hasSavedInitialPos = false;
 
     private void Start()
     {
         GameManager.Instance.RegisterPlayer(transform.parent.gameObject);
 
+        if (mainCamera != null)
+        {
+            mainCamera.transform.localPosition = new Vector3(0f, 1f, -7f);
+            mainCamera.transform.localRotation = Quaternion.identity;
+        }
+
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
 
         cameraTransition = new CameraTransition(cameraHolder, 0.4f);
-        defaultCullingMask = mainCamera.cullingMask;
 
         if (transform.parent != null)
             rb = transform.parent.GetComponent<Rigidbody>();
@@ -53,17 +49,6 @@ public class PlayerController : MonoBehaviour
         shooter.Initialize(cameraHolder, this);
         playerFSM = new PlayerFSM(this, input, shooter.Shoot, shooter.ToggleCharge);
         RegisterOriginalBody(transform.parent, rb, playerFSM);
-    }
-
-    private void LateUpdate()
-    {
-        if (!hasSavedInitialPos)
-        {
-            originalCameraLocalPos = cameraHolder.localPosition;
-            originalCameraLocalRot = cameraHolder.localRotation;
-            originalControllerLocalPos = transform.localPosition;
-            hasSavedInitialPos = true;
-        }
     }
 
     private void Update()
@@ -143,7 +128,6 @@ public class PlayerController : MonoBehaviour
 
                 shooter.enabled = false;
                 isControllingProp = true;
-                mainCamera.cullingMask |= playerBody;
             }
         }
     }
@@ -180,8 +164,6 @@ public class PlayerController : MonoBehaviour
         cameraHolder.SetParent(transform);
         cameraHolder.localPosition = Vector3.zero;
         cameraHolder.localRotation = Quaternion.identity;
-
-        mainCamera.cullingMask = defaultCullingMask;
     }
 
     public bool IsGrounded()

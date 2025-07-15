@@ -20,6 +20,21 @@ public class RunPlayerState : BasePlayerState
 
         controller.SetMoveInput(move);
 
+        Transform cam = controller.GetCameraHolder();
+        Vector3 camForward = cam.forward;
+        Vector3 camRight = cam.right;
+
+        camForward.y = 0f;
+        camRight.y = 0f;
+        camForward.Normalize();
+        camRight.Normalize();
+
+        Vector3 worldMoveDir = camRight * move.x + camForward * move.y;
+        Vector3 localMoveDir = controller.transform.InverseTransformDirection(worldMoveDir);
+
+        controller.GetAnimator().SetFloat("MoveX", localMoveDir.x);
+        controller.GetAnimator().SetFloat("MoveY", localMoveDir.z);
+
         if (move.magnitude < 0.1f)
         {
             fsm.ChangeState(PlayerState.Idle);
@@ -32,6 +47,8 @@ public class RunPlayerState : BasePlayerState
 
     public override void OnExit()
     {
-        
+        var controller = fsm.GetController();
+        controller.GetAnimator().SetFloat("MoveX", 0f);
+        controller.GetAnimator().SetFloat("MoveY", 0f);
     }
 }
