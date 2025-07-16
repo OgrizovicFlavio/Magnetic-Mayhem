@@ -16,6 +16,7 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
     private string loadedAreaSceneName;
     private SceneReferences main;
     private SceneReferences current;
+    public bool IsTransitioning { get; set; }
 
     private void Start()
     {

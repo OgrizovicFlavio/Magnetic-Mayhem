@@ -24,6 +24,7 @@ public class PlayerMovement : MonoBehaviour
     private Vector2 moveInput = Vector2.zero;
     private Vector3 currentVelocity = Vector3.zero;
     private bool isGrounded = false;
+    private bool isFrozen = false;
 
     public void Initialize(Rigidbody rb, Transform cameraTransform)
     {
@@ -39,6 +40,8 @@ public class PlayerMovement : MonoBehaviour
     public void Move()
     {
         if (rb == null || cameraTransform == null) return;
+
+        if (isFrozen) return;
 
         isGrounded = CheckIfGrounded();
 
@@ -138,5 +141,10 @@ public class PlayerMovement : MonoBehaviour
     public void SetRigidbody(Rigidbody newRb)
     {
         rb = newRb;
+    }
+
+    public void SetFrozen(bool frozen)
+    {
+        isFrozen = frozen;
     }
 }

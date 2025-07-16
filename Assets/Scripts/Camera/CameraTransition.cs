@@ -29,6 +29,8 @@ public class CameraTransition
 
         elapsed = 0f;
         active = true;
+
+        GameManager.Instance.IsTransitioning = true;
     }
 
     public void Update()
@@ -37,11 +39,18 @@ public class CameraTransition
 
         elapsed += Time.deltaTime;
         float t = Mathf.Clamp01(elapsed / duration);
+
         cameraTransform.position = Vector3.Lerp(startPos, endPos, t);
         cameraTransform.rotation = Quaternion.Slerp(startRot, endRot, t);
 
         if (t >= 1f)
+        {
+            cameraTransform.position = endPos;
+            cameraTransform.rotation = endRot;
+
             active = false;
+            GameManager.Instance.IsTransitioning = false;
+        }
     }
 
     public bool IsActive => active;

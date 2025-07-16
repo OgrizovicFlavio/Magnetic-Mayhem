@@ -1463,7 +1463,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 052a7f7838a98714992e0c6c55276179, type: 2}
+  - {fileID: 2100000, guid: 652ff32210737a843b58611c84210620, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -1638,7 +1638,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 052a7f7838a98714992e0c6c55276179, type: 2}
+  - {fileID: 2100000, guid: 652ff32210737a843b58611c84210620, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -2267,7 +2267,7 @@ GameObject:
   - component: {fileID: 362209772}
   - component: {fileID: 362209771}
   m_Layer: 10
-  m_Name: Platform 1
+  m_Name: Main Platform
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -4051,7 +4051,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 10758, guid: 0000000000000000f000000000000000, type: 0}
+  - {fileID: 2100000, guid: 652ff32210737a843b58611c84210620, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -4291,7 +4291,7 @@ GameObject:
   - component: {fileID: 552844902}
   - component: {fileID: 552844901}
   m_Layer: 10
-  m_Name: Platform 2
+  m_Name: Side Platform 1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -5186,8 +5186,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 052a7f7838a98714992e0c6c55276179, type: 2}
-  - {fileID: 10758, guid: 0000000000000000f000000000000000, type: 0}
+  - {fileID: 2100000, guid: 652ff32210737a843b58611c84210620, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -7157,8 +7156,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   outlineMode: 0
-  outlineColor: {r: 1, g: 0.39215687, b: 0, a: 1}
-  outlineWidth: 5
+  outlineColor: {r: 0.5882353, g: 0, b: 1, a: 1}
+  outlineWidth: 7.5
   precomputeOutline: 0
   bakeKeys: []
   bakeValues: []
@@ -7341,7 +7340,7 @@ GameObject:
   - component: {fileID: 1135052935}
   - component: {fileID: 1135052940}
   m_Layer: 10
-  m_Name: Platform 3
+  m_Name: Side Platform 2
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -7879,7 +7878,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7828404238315967327, guid: a4f5d4b2af55e4e4d8637b2a8848162f, type: 3}
       propertyPath: m_Name
-      value: Gate
+      value: Portal
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects:
@@ -8250,8 +8249,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   outlineMode: 0
-  outlineColor: {r: 1, g: 0.39215687, b: 0, a: 1}
-  outlineWidth: 5
+  outlineColor: {r: 0.5882353, g: 0, b: 1, a: 1}
+  outlineWidth: 7.5
   precomputeOutline: 0
   bakeKeys: []
   bakeValues: []
@@ -8466,6 +8465,37 @@ Mesh:
     offset: 0
     size: 0
     path: 
+--- !u!1 &1228585160
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1228585161}
+  m_Layer: 0
+  m_Name: ---REFERENCES---
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1228585161
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1228585160}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1242216952
 GameObject:
   m_ObjectHideFlags: 0
@@ -10648,8 +10678,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   outlineMode: 0
-  outlineColor: {r: 1, g: 0.39215687, b: 0, a: 1}
-  outlineWidth: 5
+  outlineColor: {r: 0.5882353, g: 0, b: 1, a: 1}
+  outlineWidth: 7.5
   precomputeOutline: 0
   bakeKeys: []
   bakeValues: []
@@ -10997,8 +11027,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   outlineMode: 0
-  outlineColor: {r: 1, g: 0.39215687, b: 0, a: 1}
-  outlineWidth: 5
+  outlineColor: {r: 0.5882353, g: 0, b: 1, a: 1}
+  outlineWidth: 7.5
   precomputeOutline: 0
   bakeKeys: []
   bakeValues: []
@@ -11372,7 +11402,7 @@ Transform:
   m_GameObject: {fileID: 1835398867}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -5, y: -20, z: -50}
+  m_LocalPosition: {x: -9, y: -20, z: -35}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -12573,6 +12603,8 @@ SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
   - {fileID: 686492241}
+  - {fileID: 1228585161}
+  - {fileID: 1293145802}
   - {fileID: 429548514}
   - {fileID: 362209776}
   - {fileID: 552844906}
@@ -12604,4 +12636,3 @@ SceneRoots:
   - {fileID: 2131085351}
   - {fileID: 755349917}
   - {fileID: 1644154983}
-  - {fileID: 1293145802}

@@ -46,7 +46,7 @@ public class PlayerFSM
         if (input.IsShooting())
         {
             bool isGrounded = controller.IsGrounded();
-            bool isMoving = IsMoving();
+            bool isMoving = controller.IsMoving();
             bool isIdle = currentState.playerState == PlayerState.Idle;
 
             if (isGrounded && !isMoving && isIdle)
@@ -68,19 +68,6 @@ public class PlayerFSM
             return;
 
         currentState.OnEnter();
-    }
-
-    public bool IsMoving()
-    {
-        if (input == null)
-            return false;
-
-        Vector2 moveInput = input.GetMoveInput();
-
-        if (moveInput.sqrMagnitude > 0.01f)
-            return true;
-
-        return false;
     }
 }
 

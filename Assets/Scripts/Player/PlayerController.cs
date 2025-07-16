@@ -10,6 +10,7 @@ public class PlayerController : MonoBehaviour
     [Header("Movement & Look")]
     [SerializeField] private PlayerMovement movement;
     [SerializeField] private PlayerLook look;
+    [SerializeField] private CrosshairController crosshairController;
     [SerializeField] private Camera mainCamera;
 
     [Header("Animator")]
@@ -21,8 +22,11 @@ public class PlayerController : MonoBehaviour
     private Transform originalBody;
     private CameraTransition cameraTransition;
     private RigidbodyConstraints originalConstraints;
+    private float jumpCooldownTimer = 0f;
+    private float jumpCooldownDuration = 0.1f;
 
     private bool isControllingProp = false;
+    private Controllable lastHighlighted = null;
 
     private void Start()
     {
@@ -48,12 +52,17 @@ public class PlayerController : MonoBehaviour
         look.Initialize(transform, cameraHolder, visualTransform);
         shooter.Initialize(cameraHolder, this);
         playerFSM = new PlayerFSM(this, input, shooter.Shoot, shooter.ToggleCharge);
-        RegisterOriginalBody(transform.parent, rb, playerFSM);
+        RegisterOriginalBody(transform.parent, rb);
     }
 
     private void Update()
     {
-        if (cameraTransition.IsActive)
+        bool inTransition = cameraTransition.IsActive;
+
+        look.SetFrozen(inTransition);
+        movement.SetFrozen(inTransition);
+
+        if (inTransition)
         {
             cameraTransition.Update();
             return;
@@ -67,18 +76,29 @@ public class PlayerController : MonoBehaviour
         {
             look.Rotate(input.GetLookInput());
 
+            Vector2 moveInput = input.GetMoveInput();
+            SetMoveInput(moveInput);
+
             if (isControllingProp)
             {
-                SetMoveInput(input.GetMoveInput());
-
                 if (input.IsInteracting())
                     ReturnToPlayer();
             }
             else
             {
-                movement.SetMoveInput(input.GetMoveInput());
                 playerFSM.OnUpdate();
+                HighlightControllable();
             }
+
+            if (jumpCooldownTimer > 0f)
+                jumpCooldownTimer -= Time.deltaTime;
+
+            bool grounded = IsGrounded();
+            bool inJumpCooldown = jumpCooldownTimer > 0f;
+            bool isMoving = IsMoving();
+            bool canShoot = shooter.CanShootNow() && grounded && !inJumpCooldown && !isMoving;
+
+            crosshairController.SetCanShoot(canShoot);
         }
     }
 
@@ -97,47 +117,74 @@ public class PlayerController : MonoBehaviour
         if (movement.IsGrounded())
         {
             movement.Jump();
+            jumpCooldownTimer = jumpCooldownDuration;
         }
     }
 
     public void TryPossess()
     {
-        Ray ray = new Ray(cameraHolder.position, cameraHolder.forward);
-        if (Physics.Raycast(ray, out RaycastHit hit, 20f))
+        Ray ray = mainCamera.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0f));
+        if (Physics.Raycast(ray, out RaycastHit hit, 100f))
         {
             if (hit.collider.TryGetComponent<IControllable>(out var controllable))
             {
                 cameraTransition.StartTransition(hit.transform);
                 controllable.ControlEntity(this);
 
-                if (rb != null)
-                    movement.SetRigidbody(rb);
-
-                Transform visual = hit.transform.Find("Visual");
-                if (visual != null)
-                    look.SetVisualTarget(visual);
-
-                Transform receiver = hit.transform.Find("Controller Receiver");
-                if (receiver != null)
+                if (hit.collider.TryGetComponent<Controllable>(out var ctrl))
                 {
-                    transform.parent = receiver;
-                    transform.localPosition = Vector3.zero;
-                    cameraHolder.localPosition = Vector3.zero;
-                    cameraHolder.localRotation = Quaternion.identity;
+                    var propRb = ctrl.GetComponent<Rigidbody>();
+                    SetRigidbody(propRb);
+                    movement.SetRigidbody(propRb);
+
+                    if (ctrl.Visual != null)
+                        look.SetVisualTarget(ctrl.Visual.transform);
+
+                    if (ctrl.GetControllerReceiver() != null)
+                    {
+                        transform.SetParent(ctrl.GetControllerReceiver().transform);
+                        transform.localPosition = Vector3.zero;
+                        cameraHolder.localPosition = Vector3.zero;
+                        cameraHolder.localRotation = Quaternion.identity;
+                    }
                 }
 
+                animator.SetFloat("MoveX", 0f);
+                animator.SetFloat("MoveY", 0f);
+                animator.SetInteger("State", (int)PlayerState.Idle);
+                animator.Rebind();
+                animator.enabled = false;
+
                 shooter.enabled = false;
+                crosshairController.SetActive(false);
                 isControllingProp = true;
             }
         }
     }
 
-    public void SetRigidbody(Rigidbody newRb) => rb = newRb;
-    public Animator GetAnimator() => animator;
-    public Rigidbody GetRigidbody() => rb;
-    public Transform GetCameraHolder() => cameraHolder;
+    private void HighlightControllable()
+    {
+        Ray ray = mainCamera.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0f));
+        if (Physics.Raycast(ray, out RaycastHit hit, 100f))
+        {
+            var controllable = hit.collider.GetComponentInParent<Controllable>();
+            if (controllable != null)
+            {
+                if (controllable != lastHighlighted)
+                {
+                    lastHighlighted?.SetOutline(false);
+                    controllable.SetOutline(true);
+                    lastHighlighted = controllable;
+                }
+                return;
+            }
+        }
 
-    public void RegisterOriginalBody(Transform body, Rigidbody rb, PlayerFSM fsm)
+        lastHighlighted?.SetOutline(false);
+        lastHighlighted = null;
+    }
+
+    public void RegisterOriginalBody(Transform body, Rigidbody rb)
     {
         originalConstraints = rb.constraints;
         originalBody = body;
@@ -158,16 +205,44 @@ public class PlayerController : MonoBehaviour
 
         look.SetVisualTarget(visualTransform);
 
+        animator.SetFloat("MoveX", 0f);
+        animator.SetFloat("MoveY", 0f);
+        animator.SetInteger("State", (int)PlayerState.Idle);
+        animator.enabled = true;
+
         shooter.enabled = true;
+        crosshairController.SetActive(true);
         isControllingProp = false;
 
         cameraHolder.SetParent(transform);
         cameraHolder.localPosition = Vector3.zero;
         cameraHolder.localRotation = Quaternion.identity;
+
+        InputHandler input = playerFSM?.GetInput();
+        if (input != null)
+        {
+            Vector2 move = input.GetMoveInput();
+            animator.SetFloat("MoveX", move.x);
+            animator.SetFloat("MoveY", move.y);
+            animator.SetInteger("State", move.magnitude > 0.1f ? (int)PlayerState.Run : (int)PlayerState.Idle);
+            animator.Update(0f);
+        }
     }
 
-    public bool IsGrounded()
+    public bool IsGrounded() => movement.IsGrounded();
+
+    public bool IsMoving()
     {
-        return movement.IsGrounded();
+        InputHandler input = playerFSM?.GetInput();
+        if (input == null) return false;
+
+        Vector2 move = input.GetMoveInput();
+        return move.magnitude > 0.1f;
     }
+
+    public void SetRigidbody(Rigidbody newRb) => rb = newRb;
+    public Animator GetAnimator() => animator;
+    public Rigidbody GetRigidbody() => rb;
+    public Transform GetCameraHolder() => cameraHolder;
+    public CrosshairController GetCrosshairController() => crosshairController;
 }

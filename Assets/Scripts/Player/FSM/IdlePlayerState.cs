@@ -10,6 +10,7 @@ public class IdlePlayerState : BasePlayerState
     public override void OnEnter()
     {
         fsm.GetController().GetAnimator().SetInteger("State", (int)PlayerState.Idle);
+
         fsm.GetController().SetMoveInput(Vector2.zero);
     }
 

@@ -10,11 +10,12 @@ public class PlayerLook : MonoBehaviour
     [SerializeField] private float maxVerticalAngle = 80f;
 
     private Transform visualTransform;
-    private float visualTurnSpeed = 10f;
     private Transform bodyTransform;
     private Transform cameraHolderTransform;
 
+    private float visualTurnSpeed = 10f;
     private float verticalLookRotation = 0f;
+    private bool isFrozen = false;
 
     public void Initialize(Transform bodyTransform, Transform cameraHolderTransform, Transform visualTransform)
     {
@@ -25,7 +26,7 @@ public class PlayerLook : MonoBehaviour
 
     public void Rotate(Vector2 lookInput)
     {
-        if (bodyTransform == null || cameraHolderTransform == null || visualTransform == null)
+        if (isFrozen || bodyTransform == null || cameraHolderTransform == null || visualTransform == null)
             return;
 
         float mouseX = lookInput.x * mouseSensitivity * Time.deltaTime;
@@ -48,5 +49,10 @@ public class PlayerLook : MonoBehaviour
     public void SetVisualTarget(Transform newTarget)
     {
         visualTransform = newTarget;
+    }
+
+    public void SetFrozen(bool frozen)
+    {
+        isFrozen = frozen;
     }
 }

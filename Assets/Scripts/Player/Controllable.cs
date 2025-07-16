@@ -1,13 +1,48 @@
 using UnityEngine;
 
+[RequireComponent(typeof(Rigidbody))]
 public class Controllable : MonoBehaviour, IControllable
 {
+    [SerializeField] private Rigidbody rb;
     [SerializeField] private GameObject visual;
+    [SerializeField] private GameObject controllerReceiver;
+
+    private Outline outline;
+
+    public GameObject Visual => visual;
+
+    public GameObject GetControllerReceiver()
+    {
+        return controllerReceiver;
+    }
+
+    private void Awake()
+    {
+        rb = GetComponent<Rigidbody>();
+
+        gameObject.layer = LayerMask.NameToLayer("Magnetic");
+
+        outline = GetComponentInChildren<Outline>();
+        if (outline != null)
+            outline.enabled = false;
+
+        if (visual == null)
+        {
+            visual = new GameObject("Visual");
+            visual.transform.parent = transform;
+            visual.transform.SetLocalPositionAndRotation(Vector3.zero, Quaternion.identity);
+        }
+
+        if (controllerReceiver == null)
+        {
+            controllerReceiver = new GameObject("Controller Receiver");
+            controllerReceiver.transform.parent = transform;
+            controllerReceiver.transform.SetLocalPositionAndRotation(Vector3.zero, Quaternion.identity);
+        }
+    }
 
     public void ControlEntity(PlayerController controller)
     {
-        Rigidbody rb = GetComponent<Rigidbody>();
-
         controller.GetRigidbody().velocity = Vector3.zero;
 
         controller.transform.SetParent(transform);
@@ -24,5 +59,11 @@ public class Controllable : MonoBehaviour, IControllable
         Transform visualDelPlayer = controller.transform.GetChild(0);
         if (visualDelPlayer != null)
             visualDelPlayer.gameObject.SetActive(true);
+    }
+
+    public void SetOutline(bool active)
+    {
+        if (outline != null)
+            outline.enabled = active;
     }
 }

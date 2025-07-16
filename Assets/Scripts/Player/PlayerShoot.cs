@@ -3,9 +3,9 @@ using UnityEngine;
 public class PlayerShoot : MonoBehaviour
 {
     [Header("References")]
+    [SerializeField] private CrosshairController crosshairController;
     [SerializeField] private Camera playerCamera;
     [SerializeField] private Transform firePoint;
-    [SerializeField] private LineRenderer laserRenderer;
     [SerializeField] private LayerMask raycastMask;
 
     [Header("Settings")]
@@ -26,67 +26,28 @@ public class PlayerShoot : MonoBehaviour
         this.controller = controller;
     }
 
-    private void Update()
-    {
-        UpdateLaser();
-    }
-
-    private void OnEnable()
-    {
-        if (laserRenderer != null)
-            laserRenderer.enabled = true;
-    }
-
-    private void OnDisable()
-    {
-        if (laserRenderer != null)
-            laserRenderer.enabled = false;
-    }
-
-    private void UpdateLaser()
-    {
-        if (laserRenderer == null || firePoint == null || cameraTransform == null) 
-            return;
-
-        Ray ray = new Ray(firePoint.position, cameraTransform.forward);
-        Vector3 end = ray.origin + ray.direction * maxDistance;
-
-        if (Physics.Raycast(ray, out var hit, maxDistance, raycastMask))
-            end = hit.point;
-
-        laserRenderer.positionCount = 2;
-        laserRenderer.SetPosition(0, firePoint.position);
-        laserRenderer.SetPosition(1, end);
-
-        if (controller != null)
-        {
-            Color color = currentCharge == MagneticChargeType.Positive ? Color.red : Color.blue;
-            laserRenderer.startColor = color;
-            laserRenderer.endColor = color;
-        }
-    }
-
     public void Shoot()
     {
-        if (Time.time < nextFireTime) 
+        if (Time.time < nextFireTime)
             return;
 
         nextFireTime = Time.time + fireRate;
 
-        if (firePoint == null || cameraTransform == null) 
+        if (firePoint == null || playerCamera == null)
             return;
 
-        Ray ray = new Ray(firePoint.position, cameraTransform.forward);
-        Vector3 dir = ray.direction;
+        // Raycast desde el centro de la pantalla (crosshair)
+        Ray ray = playerCamera.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0));
         Vector3 targetPoint = ray.origin + ray.direction * maxDistance;
 
-        // Hacer raycast para saber si impacta algo antes del maxDistance
+        // Si golpea algo, el punto de impacto es el target
         if (Physics.Raycast(ray, out var hit, maxDistance, raycastMask))
         {
             targetPoint = hit.point;
         }
 
-        dir = (targetPoint - firePoint.position).normalized;
+        //Calculo la dirección desde el firePoint hacia ese punto
+        Vector3 dir = (targetPoint - firePoint.position).normalized;
 
         Sticky sticky = PoolManager.Instance.Get<Sticky>(firePoint.position, Quaternion.LookRotation(dir));
         if (sticky != null)
@@ -94,6 +55,7 @@ public class PlayerShoot : MonoBehaviour
             sticky.SetCharge(currentCharge);
             sticky.Launch(dir);
 
+            //Evitar colisión con el jugador
             Collider stickyCollider = sticky.GetComponent<Collider>();
             Collider playerCollider = controller.GetComponentInParent<Collider>();
 
@@ -102,10 +64,19 @@ public class PlayerShoot : MonoBehaviour
         }
     }
 
-    public void ToggleCharge()
+    public bool CanShootNow()
     {
-        currentCharge = currentCharge == MagneticChargeType.Positive ? MagneticChargeType.Negative : MagneticChargeType.Positive;
+        return Time.time >= nextFireTime;
     }
 
-    public MagneticChargeType GetCurrentCharge() => currentCharge;
+    public void ToggleCharge()
+    {
+        if (currentCharge == MagneticChargeType.Positive)
+            currentCharge = MagneticChargeType.Negative;
+        else
+            currentCharge = MagneticChargeType.Positive;
+
+        if (crosshairController != null)
+            crosshairController.SetCharge(currentCharge);
+    }
 }
