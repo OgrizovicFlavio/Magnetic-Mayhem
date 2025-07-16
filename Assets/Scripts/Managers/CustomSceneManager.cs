@@ -20,15 +20,15 @@ public class CustomSceneManager : MonoBehaviourSingleton<CustomSceneManager>
         if (background != null)
             background.SetActive(false);
 
-        if (gameObject.activeSelf)
-            gameObject.SetActive(false);
+        if (image != null)
+        {
+            image.fillAmount = 0f;
+            image.enabled = false;
+        }
     }
 
     public void ChangeSceneTo(string sceneName)
     {
-        if (!gameObject.activeSelf)
-            gameObject.SetActive(true);
-
         if (loadingScene != null)
         {
             StopCoroutine(loadingScene);
@@ -38,7 +38,11 @@ public class CustomSceneManager : MonoBehaviourSingleton<CustomSceneManager>
         if (background != null)
             background.SetActive(true);
 
-        image.fillAmount = 0f;
+        if (image != null)
+        {
+            image.fillAmount = 0f;
+            image.enabled = true;
+        }
 
         loadingScene = LoadingScene(sceneName);
         Time.timeScale = 0;
@@ -56,7 +60,9 @@ public class CustomSceneManager : MonoBehaviourSingleton<CustomSceneManager>
         while (onTime < maxTime * percentage)
         {
             onTime += Time.unscaledDeltaTime;
-            image.fillAmount = onTime / maxTime;
+            if (image != null)
+                image.fillAmount = onTime / maxTime;
+
             yield return null;
         }
 
@@ -68,23 +74,25 @@ public class CustomSceneManager : MonoBehaviourSingleton<CustomSceneManager>
         while (onTime < maxTime)
         {
             onTime += Time.unscaledDeltaTime * 10f;
-            image.fillAmount = onTime / maxTime;
+            if (image != null)
+                image.fillAmount = onTime / maxTime;
+
             yield return null;
         }
 
-        image.fillAmount = 1f;
-
-        gameObject.SetActive(false);
-        Time.timeScale = 1;
-
-        operation.allowSceneActivation = true;
-
-        yield return null;
-
-        image.fillAmount = 0f;
+        if (image != null)
+        {
+            image.fillAmount = 1f;
+            image.enabled = false;
+        }
 
         if (background != null)
             background.SetActive(false);
+
+        Time.timeScale = 1;
+        operation.allowSceneActivation = true;
+
+        yield return null;
 
         OnLoadedScene?.Invoke();
     }

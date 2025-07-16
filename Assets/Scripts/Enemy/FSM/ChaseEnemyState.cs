@@ -12,13 +12,13 @@ public class ChaseEnemyState : BaseEnemyState
 
     public override void OnUpdate()
     {
-        var target = controller.GetTarget();
-
         if (controller.IsMagnetized())
         {
             context.ChangeState(EnemyState.Magnetized);
             return;
         }
+
+        var target = controller.GetTarget();
 
         if (target != null)
         {

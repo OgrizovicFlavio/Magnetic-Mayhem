@@ -4,55 +4,74 @@ using UnityEngine;
 public class EnemyAttack : MonoBehaviour
 {
     [Header("Attack Settings")]
-    [SerializeField] private float attackForce = 10f;
-    [SerializeField] private float retreatDuration = 0.75f;
-    [SerializeField] private float damage = 25f;
-    [SerializeField] private float attackRange = 3f;
+    [SerializeField] private float attackForce = 20f;
+    [SerializeField] private float retreatForceMultiplier = 0.5f;
+    [SerializeField] private float retreatDuration = 1.5f;
+    [SerializeField] private float damage = 10f;
+    [SerializeField] private float attackRange = 5f;
 
     private bool canAttack = true;
     private bool isRetreating = false;
 
     private Transform player;
+    private Rigidbody rb;
     private EnemyMovement enemyMovement;
 
     private void Awake()
     {
+        rb = GetComponent<Rigidbody>();
         enemyMovement = GetComponent<EnemyMovement>();
-
-        GameObject playerObj = GameObject.FindWithTag("Player");
-        if (playerObj != null)
-            player = playerObj.transform;
     }
 
-    #region Attack Logic
+    public void SetPlayer(Transform player)
+    {
+        this.player = player;
+    }
 
     public void TryAttack()
     {
         if (!canAttack || isRetreating || player == null)
             return;
 
-        if (Vector3.Distance(transform.position, player.position) > attackRange)
+        float distance = Vector3.Distance(transform.position, player.position);
+        if (distance > attackRange)
             return;
 
-        if (player.TryGetComponent<PlayerHealth>(out var health))
-        {
-            health.TakeDamage(damage);
-            Debug.Log("[ENEMY ATTACK] Jugador dañado por " + damage);
-        }
-
-        StartCoroutine(RetreatThenCooldown());
+        StartCoroutine(AttackRoutine());
     }
 
-    #endregion
-
-    #region Retreat
-
-    private IEnumerator RetreatThenCooldown()
+    private IEnumerator AttackRoutine()
     {
         canAttack = false;
-        isRetreating = true;
 
-        enemyMovement?.RetreatFrom(player.position, attackForce, retreatDuration);
+        enemyMovement?.StopMovement();
+        rb.velocity = Vector3.zero;
+        rb.angularVelocity = Vector3.zero;
+
+        Vector3 dir = (player.position - transform.position);
+        dir.y = 0f;
+        dir.Normalize();
+
+        float chargeTime = 0.3f;
+        float elapsed = 0f;
+        float chargeSpeed = attackForce;
+
+        while (elapsed < chargeTime)
+        {
+            rb.MovePosition(rb.position + dir * chargeSpeed * Time.fixedDeltaTime);
+            elapsed += Time.fixedDeltaTime;
+            yield return new WaitForFixedUpdate();
+        }
+
+ 
+        yield return new WaitForSeconds(0.1f);
+
+        isRetreating = true;
+        rb.velocity = Vector3.zero;
+        rb.angularVelocity = Vector3.zero;
+
+        Vector3 retreatDir = -dir;
+        rb.AddForce(retreatDir * (attackForce * retreatForceMultiplier), ForceMode.Impulse);
 
         yield return new WaitForSeconds(retreatDuration);
 
@@ -61,8 +80,5 @@ public class EnemyAttack : MonoBehaviour
     }
 
     public bool IsRetreating() => isRetreating;
-
-    #endregion
-
     public float GetDamageAmount() => damage;
 }

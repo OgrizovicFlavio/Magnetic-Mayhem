@@ -87,7 +87,7 @@ public class PlayerController : MonoBehaviour
             else
             {
                 playerFSM.OnUpdate();
-                HighlightControllable();
+                CheckInteractable();
             }
 
             if (jumpCooldownTimer > 0f)
@@ -162,28 +162,6 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-    private void HighlightControllable()
-    {
-        Ray ray = mainCamera.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0f));
-        if (Physics.Raycast(ray, out RaycastHit hit, 100f))
-        {
-            var controllable = hit.collider.GetComponentInParent<Controllable>();
-            if (controllable != null)
-            {
-                if (controllable != lastHighlighted)
-                {
-                    lastHighlighted?.SetOutline(false);
-                    controllable.SetOutline(true);
-                    lastHighlighted = controllable;
-                }
-                return;
-            }
-        }
-
-        lastHighlighted?.SetOutline(false);
-        lastHighlighted = null;
-    }
-
     public void RegisterOriginalBody(Transform body, Rigidbody rb)
     {
         originalConstraints = rb.constraints;
@@ -227,6 +205,41 @@ public class PlayerController : MonoBehaviour
             animator.SetInteger("State", move.magnitude > 0.1f ? (int)PlayerState.Run : (int)PlayerState.Idle);
             animator.Update(0f);
         }
+    }
+    private void CheckInteractable()
+    {
+        Ray ray = mainCamera.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0f));
+
+        if (Physics.Raycast(ray, out RaycastHit controllableHit, 100f))
+        {
+            var c = controllableHit.collider.GetComponentInParent<Controllable>();
+            if (c != null)
+            {
+                UIManager.Instance?.ShowInteractionHint("POSSESS: E");
+
+                if (c != lastHighlighted)
+                {
+                    lastHighlighted?.SetOutline(false);
+                    c.SetOutline(true);
+                    lastHighlighted = c;
+                }
+                return;
+            }
+        }
+
+        if (Physics.Raycast(ray, out RaycastHit portalHit, 5f))
+        {
+            if (portalHit.collider.TryGetComponent<Portal>(out var portal))
+            {
+                string msg = portal.IsExit() ? "EXIT: E" : "ENTER: E";
+                UIManager.Instance?.ShowInteractionHint(msg);
+                return;
+            }
+        }
+
+        lastHighlighted?.SetOutline(false);
+        lastHighlighted = null;
+        UIManager.Instance?.HideInteractionHint();
     }
 
     public bool IsGrounded() => movement.IsGrounded();

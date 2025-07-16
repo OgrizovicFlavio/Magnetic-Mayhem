@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 598503047124965395}
   - component: {fileID: 1195040408210122492}
   - component: {fileID: 1506898964529315218}
-  m_Layer: 10
+  m_Layer: 11
   m_Name: Trigger
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -83,7 +83,7 @@ GameObject:
   - component: {fileID: 2676805232764057696}
   - component: {fileID: 5162636574872473210}
   - component: {fileID: 292854195844058318}
-  m_Layer: 10
+  m_Layer: 11
   m_Name: Visual
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -188,7 +188,7 @@ GameObject:
   - component: {fileID: 5782656093549430336}
   - component: {fileID: 8621271075513430666}
   - component: {fileID: 407800048728467353}
-  m_Layer: 0
+  m_Layer: 11
   m_Name: Portal
   m_TagString: Untagged
   m_Icon: {fileID: 0}

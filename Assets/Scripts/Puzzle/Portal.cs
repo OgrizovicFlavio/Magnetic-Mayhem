@@ -10,6 +10,8 @@ public class Portal : MonoBehaviour
     private Transform playerRoot;
     private bool canInteract = false;
 
+    public bool IsExit() => isExitPortal;
+
     private void OnEnable()
     {
         GameManager.OnPlayerRegistered += SetPlayerRoot;
@@ -24,7 +26,6 @@ public class Portal : MonoBehaviour
     {
         playerRoot = player.transform;
     }
-
 
     private void Update()
     {

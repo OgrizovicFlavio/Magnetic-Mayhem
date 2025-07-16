@@ -9,7 +9,6 @@ public class AttackEnemyState : BaseEnemyState
 
     public override void OnEnter()
     {
-        Debug.Log("Enemy entered ATTACK state");
         movement.StopMovement();
     }
 

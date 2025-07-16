@@ -4,18 +4,24 @@ public class PlayerHealth : MonoBehaviour, IDamageable
 {
     [Header("Health")]
     [SerializeField] private float maxHealth = 100f;
+    [SerializeField] private float currentHealth;
 
-    private float currentHealth;
+    private DamageEffect damageEffect;
 
     private void Start()
     {
         currentHealth = maxHealth;
+        damageEffect = GetComponentInChildren<DamageEffect>();
     }
 
     public void TakeDamage(float amount)
     {
         currentHealth -= amount;
-        Debug.Log($"[PLAYER] Recibe {amount} de daño. Vida restante: {currentHealth}");
+
+        UIManager.Instance?.SetHealth(currentHealth, maxHealth);
+
+        if (damageEffect != null)
+            damageEffect.Flash();
 
         if (currentHealth <= 0)
             Die();
@@ -25,7 +31,6 @@ public class PlayerHealth : MonoBehaviour, IDamageable
 
     private void Die()
     {
-        Debug.Log("[PLAYER] ¡El jugador ha muerto!");
     }
 
     private void OnCollisionEnter(Collision collision)

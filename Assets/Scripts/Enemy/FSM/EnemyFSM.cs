@@ -25,6 +25,12 @@ public class EnemyFSM
 
     public void OnUpdate()
     {
+        if (controller.IsMagnetized() && CurrentStateType != EnemyState.Magnetized)
+        {
+            ChangeState(EnemyState.Magnetized);
+            return;
+        }
+
         currentState?.OnUpdate();
     }
 

@@ -101,4 +101,9 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
         playerRoot = player;
         OnPlayerRegistered?.Invoke(player);
     }
+
+    public GameObject GetPlayer()
+    {
+        return playerRoot;
+    }
 }

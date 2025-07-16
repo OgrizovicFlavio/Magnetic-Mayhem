@@ -89,8 +89,8 @@ public class Magnet : MonoBehaviour
                     Vector3 repulsionDir = (horizontal + Vector3.up * 1.5f).normalized;
 
                     float distance = Mathf.Max(Vector3.Distance(transform.position, other.transform.position), 0.1f);
-                    float attenuation = 1f / Mathf.Pow(distance, 1.2f); // más agresivo
-                    float finalForce = repulsionForce * attenuation * 50f; // ajuste según pruebas
+                    float attenuation = 1f / Mathf.Pow(distance, 1.2f);
+                    float finalForce = repulsionForce * attenuation * 50f;
 
                     enemy.ApplyRepulsion(repulsionDir, finalForce);
 

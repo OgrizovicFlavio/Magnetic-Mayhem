@@ -12,22 +12,21 @@ public class PatrolEnemyState : BaseEnemyState
     public override void OnEnter()
     {
         movement.StopMovement();
-
         controller.MoveToRandomPatrolPoint();
         currentPatrolTarget = controller.GetCurrentPatrolPoint();
     }
 
     public override void OnUpdate()
     {
-        if (controller.IsPlayerInChaseRange())
-        {
-            context.ChangeState(EnemyState.Chase);
-            return;
-        }
-
         if (controller.IsMagnetized())
         {
             context.ChangeState(EnemyState.Magnetized);
+            return;
+        }
+
+        if (controller.IsPlayerInChaseRange())
+        {
+            context.ChangeState(EnemyState.Chase);
             return;
         }
 

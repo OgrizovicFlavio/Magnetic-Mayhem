@@ -24,11 +24,6 @@ public class EnemyController : MonoBehaviour, IDamageable
     private int lastPatrolIndex = -1;
     private int currentPatrolIndex = 0;
 
-    private void Start()
-    {
-        fsm.ChangeState(EnemyState.Patrol);
-    }
-
     private void Awake()
     {
         currentHealth = maxHealth;
@@ -39,18 +34,18 @@ public class EnemyController : MonoBehaviour, IDamageable
 
         fsm = new EnemyFSM(this);
 
-        GameObject player = GameObject.FindWithTag("Player");
-        if (player != null)
+        GameObject playerObj = GameManager.Instance.GetPlayer();
+        if (playerObj != null)
         {
-            target = player.transform;
+            target = playerObj.transform;
 
-            Collider playerCollider = player.GetComponent<Collider>();
-            Collider enemyCollider = GetComponent<Collider>();
-            if (playerCollider != null && enemyCollider != null)
-            {
-                Physics.IgnoreCollision(enemyCollider, playerCollider);
-            }
+            enemyAttack?.SetPlayer(target);
         }
+    }
+
+    private void Start()
+    {
+        fsm.ChangeState(EnemyState.Patrol);
     }
 
     private void Update()
@@ -59,7 +54,7 @@ public class EnemyController : MonoBehaviour, IDamageable
 
         if (fsm.CurrentStateType != EnemyState.Magnetized)
         {
-            Debug.DrawRay(transform.position, rb.velocity, Color.cyan, 0.1f);
+            enemyMovement?.UpdateHeight();
         }
     }
 
@@ -74,13 +69,11 @@ public class EnemyController : MonoBehaviour, IDamageable
         {
             float damage = impactForce * impactDamageMultiplier;
             TakeDamage(damage);
-            Debug.Log($"[DAMAGE] {name} recibió {damage} por colisión con {collision.gameObject.name}");
         }
 
         if (fsm.CurrentStateType == EnemyState.Magnetized &&
             !Utilities.CheckLayerInMask(LayerMask.GetMask("Projectile"), collision.gameObject.layer))
         {
-            Debug.Log($"[MAGNET] {name} colisionó mientras estaba magnetizado");
             enemyMovement.RegisterMagnetizedCollision();
         }
     }
@@ -99,7 +92,13 @@ public class EnemyController : MonoBehaviour, IDamageable
     public bool IsPlayerInAttackRange()
     {
         if (target == null) return false;
-        return Vector3.Distance(transform.position, target.position) <= attackRange;
+
+        Vector3 a = transform.position;
+        Vector3 b = target.position;
+        a.y = 0;
+        b.y = 0;
+
+        return Vector3.Distance(a, b) <= attackRange;
     }
 
     public void AttackPlayer()
@@ -120,7 +119,6 @@ public class EnemyController : MonoBehaviour, IDamageable
     }
 
     public bool IsMagnetized() => magnetizeCount > 0;
-
     public bool HasCollidedWhileMagnetized() => enemyMovement != null && enemyMovement.UpdateHeight(0.2f);
     public void ResetCollisionFlag() => enemyMovement?.ResetMagnetizedCollision();
 
@@ -174,8 +172,6 @@ public class EnemyController : MonoBehaviour, IDamageable
     public void TakeDamage(float amount)
     {
         currentHealth -= amount;
-        Debug.Log($"[DAMAGE] {name} took {amount} damage. Remaining: {currentHealth}");
-
         if (currentHealth <= 0)
         {
             Die();
