@@ -34,7 +34,7 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
         main.SetActiveGameObjects(false);
 
         CustomSceneManager.OnLoadedScene += CustomSceneManager_OnLoadedScene;
-        CustomSceneManager.Instance.ChangeSceneTo(newSceneName);
+        CustomSceneManager.Instance.ChangeSceneTo(newSceneName, true);
     }
 
     private void CustomSceneManager_OnLoadedScene()
@@ -107,3 +107,4 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
         return playerRoot;
     }
 }
+

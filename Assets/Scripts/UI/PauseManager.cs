@@ -1,6 +1,7 @@
 using System;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 public class PauseManager : MonoBehaviourSingleton<PauseManager>
 {
@@ -10,6 +11,11 @@ public class PauseManager : MonoBehaviourSingleton<PauseManager>
     [SerializeField] private GameObject pauseMenu;
     [SerializeField] private GameObject crosshair;
 
+    [Header("Buttons")]
+    [SerializeField] private Button resumeButton;
+    [SerializeField] private Button returnToMainButton;
+    [SerializeField] private Button quitButton;
+
     private bool isPaused = false;
 
     protected override void OnAwaken()
@@ -17,6 +23,30 @@ public class PauseManager : MonoBehaviourSingleton<PauseManager>
         Time.timeScale = 1;
         if (pauseMenu != null) pauseMenu.SetActive(false);
         if (crosshair != null) crosshair.SetActive(true);
+    }
+
+    private void OnEnable()
+    {
+        if (resumeButton != null)
+            resumeButton.onClick.AddListener(ResumeGame);
+
+        if (returnToMainButton != null)
+            returnToMainButton.onClick.AddListener(ReturnToMainMenu);
+
+        if (quitButton != null)
+            quitButton.onClick.AddListener(QuitGame);
+    }
+
+    private void OnDisable()
+    {
+        if (resumeButton != null)
+            resumeButton.onClick.RemoveAllListeners();
+
+        if (returnToMainButton != null)
+            returnToMainButton.onClick.RemoveAllListeners();
+
+        if (quitButton != null)
+            quitButton.onClick.RemoveAllListeners();
     }
 
     private void Update()
@@ -37,8 +67,10 @@ public class PauseManager : MonoBehaviourSingleton<PauseManager>
         isPaused = true;
         Time.timeScale = 0;
 
-        if (pauseMenu != null) pauseMenu.SetActive(true);
-        if (crosshair != null) crosshair.SetActive(false);
+        if (pauseMenu != null) 
+            pauseMenu.SetActive(true);
+        if (crosshair != null) 
+            crosshair.SetActive(false);
 
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
@@ -49,8 +81,10 @@ public class PauseManager : MonoBehaviourSingleton<PauseManager>
         isPaused = false;
         Time.timeScale = 1;
 
-        if (pauseMenu != null) pauseMenu.SetActive(false);
-        if (crosshair != null) crosshair.SetActive(true);
+        if (pauseMenu != null) 
+            pauseMenu.SetActive(false);
+        if (crosshair != null) 
+            crosshair.SetActive(true);
 
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
@@ -59,6 +93,12 @@ public class PauseManager : MonoBehaviourSingleton<PauseManager>
     public void ReturnToMainMenu()
     {
         Time.timeScale = 1;
+
+        if (pauseMenu != null) 
+            pauseMenu.SetActive(false);
+        if (crosshair != null) 
+            crosshair.SetActive(false);
+
         CustomSceneManager.Instance.ChangeSceneTo("Main Menu");
     }
 

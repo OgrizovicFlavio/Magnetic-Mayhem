@@ -39,35 +39,46 @@ public class PlayerMovement : MonoBehaviour
 
     public void Move()
     {
-        if (rb == null || cameraTransform == null) return;
-
-        if (isFrozen) return;
+        if (rb == null || cameraTransform == null || isFrozen) return;
 
         isGrounded = CheckIfGrounded();
-
         ApplyGravity();
 
+        // Dirección según la cámara (solo XZ)
         Vector3 forward = cameraTransform.forward;
         Vector3 right = cameraTransform.right;
-
         forward.y = 0f;
         right.y = 0f;
-
         forward.Normalize();
         right.Normalize();
 
-        Vector3 moveDir = (right * moveInput.x + forward * moveInput.y).normalized;
+        Vector3 inputDir = (right * moveInput.x + forward * moveInput.y).normalized;
 
-        if (!CanMove(moveDir))
+        if (!CanMove(inputDir))
             return;
 
-        Vector3 desiredVelocity = rb.velocity;
+        Vector3 moveDirection = inputDir * moveSpeed;
 
-        if (isGrounded || !IsTouchingWall())
+        // Obtener la normal del suelo o rampa
+        Vector3 groundNormal = Vector3.up;
+        RaycastHit slopeHit;
+        if (Physics.Raycast(rb.position, Vector3.down, out slopeHit, groundDistance + 0.6f, groundLayer))
         {
-            desiredVelocity = new Vector3(moveDir.x * moveSpeed, rb.velocity.y, moveDir.z * moveSpeed);
-            rb.velocity = Vector3.SmoothDamp(rb.velocity, desiredVelocity, ref currentVelocity, 0.1f);
+            groundNormal = slopeHit.normal;
         }
+
+        // Proyectar el movimiento sobre la rampa
+        Vector3 projected = Vector3.ProjectOnPlane(moveDirection, groundNormal).normalized * moveSpeed;
+
+        // --- NUEVO ---
+        // Si estamos en el aire y tocamos una pared, cancelamos el movimiento horizontal
+        if (!isGrounded && IsTouchingWall())
+        {
+            projected = Vector3.zero; // solo dejamos la gravedad
+        }
+
+        Vector3 desiredVelocity = new Vector3(projected.x, rb.velocity.y, projected.z);
+        rb.velocity = Vector3.SmoothDamp(rb.velocity, desiredVelocity, ref currentVelocity, 0.05f);
     }
 
     public void Jump()
@@ -93,8 +104,18 @@ public class PlayerMovement : MonoBehaviour
 
     private bool CheckIfGrounded()
     {
-        bool grounded = Physics.CheckSphere(groundCheck.position, groundDistance, groundLayer);
-        return grounded;
+        Vector3 origin = groundCheck.position + Vector3.up * 0.1f;
+        Vector3 direction = Vector3.down;
+        float rayLength = groundDistance + 0.1f;
+
+        if (Physics.Raycast(origin, direction, out RaycastHit hit, rayLength))
+        {
+            // Verifica que la superficie no sea demasiado empinada
+            float angle = Vector3.Angle(hit.normal, Vector3.up);
+            return angle < maxSlopeAngle;
+        }
+
+        return false;
     }
 
     private bool IsTouchingWall()
@@ -148,3 +169,4 @@ public class PlayerMovement : MonoBehaviour
         isFrozen = frozen;
     }
 }
+

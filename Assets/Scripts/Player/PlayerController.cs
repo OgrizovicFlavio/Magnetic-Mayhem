@@ -210,9 +210,9 @@ public class PlayerController : MonoBehaviour
     {
         Ray ray = mainCamera.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0f));
 
-        if (Physics.Raycast(ray, out RaycastHit controllableHit, 100f))
+        if (Physics.Raycast(ray, out RaycastHit hit, 25f))
         {
-            var c = controllableHit.collider.GetComponentInParent<Controllable>();
+            var c = hit.collider.GetComponentInParent<Controllable>();
             if (c != null)
             {
                 UIManager.Instance?.ShowInteractionHint("POSSESS: E");
@@ -223,16 +223,17 @@ public class PlayerController : MonoBehaviour
                     c.SetOutline(true);
                     lastHighlighted = c;
                 }
+
                 return;
             }
-        }
 
-        if (Physics.Raycast(ray, out RaycastHit portalHit, 5f))
-        {
-            if (portalHit.collider.TryGetComponent<Portal>(out var portal))
+            if (hit.collider.TryGetComponent<Portal>(out var portal))
             {
                 string msg = portal.IsExit() ? "EXIT: E" : "ENTER: E";
                 UIManager.Instance?.ShowInteractionHint(msg);
+
+                lastHighlighted?.SetOutline(false);
+                lastHighlighted = null;
                 return;
             }
         }

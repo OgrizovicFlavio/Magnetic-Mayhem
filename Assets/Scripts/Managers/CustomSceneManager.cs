@@ -14,6 +14,7 @@ public class CustomSceneManager : MonoBehaviourSingleton<CustomSceneManager>
     [SerializeField] private float maxTime = 5f;
 
     private IEnumerator loadingScene;
+    private string currentScene;
 
     protected override void OnAwaken()
     {
@@ -25,9 +26,11 @@ public class CustomSceneManager : MonoBehaviourSingleton<CustomSceneManager>
             image.fillAmount = 0f;
             image.enabled = false;
         }
+
+        currentScene = SceneManager.GetActiveScene().name;
     }
 
-    public void ChangeSceneTo(string sceneName)
+    public void ChangeSceneTo(string sceneName, bool additive = false)
     {
         if (loadingScene != null)
         {
@@ -44,14 +47,16 @@ public class CustomSceneManager : MonoBehaviourSingleton<CustomSceneManager>
             image.enabled = true;
         }
 
-        loadingScene = LoadingScene(sceneName);
+        loadingScene = LoadingScene(sceneName, additive);
         Time.timeScale = 0;
         StartCoroutine(loadingScene);
     }
 
-    private IEnumerator LoadingScene(string sceneName)
+    private IEnumerator LoadingScene(string sceneName, bool additive)
     {
-        AsyncOperation operation = SceneManager.LoadSceneAsync(sceneName, LoadSceneMode.Additive);
+        LoadSceneMode mode = additive ? LoadSceneMode.Additive : LoadSceneMode.Single;
+
+        AsyncOperation operation = SceneManager.LoadSceneAsync(sceneName, mode);
         operation.allowSceneActivation = false;
 
         float onTime = 0f;
@@ -80,6 +85,13 @@ public class CustomSceneManager : MonoBehaviourSingleton<CustomSceneManager>
             yield return null;
         }
 
+        operation.allowSceneActivation = true;
+        yield return null;
+
+        Scene newScene = SceneManager.GetSceneByName(sceneName);
+        if (newScene.IsValid() && newScene.isLoaded)
+            SceneManager.SetActiveScene(newScene);
+
         if (image != null)
         {
             image.fillAmount = 1f;
@@ -90,11 +102,8 @@ public class CustomSceneManager : MonoBehaviourSingleton<CustomSceneManager>
             background.SetActive(false);
 
         Time.timeScale = 1;
-        operation.allowSceneActivation = true;
-
-        yield return null;
+        currentScene = sceneName;
 
         OnLoadedScene?.Invoke();
     }
 }
-
