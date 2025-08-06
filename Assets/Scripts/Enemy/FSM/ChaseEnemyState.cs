@@ -19,7 +19,6 @@ public class ChaseEnemyState : BaseEnemyState
         }
 
         var target = controller.GetTarget();
-
         if (target != null)
         {
             movement.MoveTowards(target.position);

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 public class PlayerMovement : MonoBehaviour
@@ -18,6 +19,11 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private float maxSlopeAngle = 40f;
     [SerializeField] private float slopeCheckDistance = 5f;
 
+    [Header("Footstep Audio")]
+    [SerializeField] private AudioSource footstepSource;
+    [SerializeField] private List<AudioClip> footstepClips = new();
+    [SerializeField] private float maxAudioTime = 0.1f;
+
     private Rigidbody rb;
     private Transform cameraTransform;
 
@@ -25,6 +31,7 @@ public class PlayerMovement : MonoBehaviour
     private Vector3 currentVelocity = Vector3.zero;
     private bool isGrounded = false;
     private bool isFrozen = false;
+    private float audioTimer = 0f;
 
     public void Initialize(Rigidbody rb, Transform cameraTransform)
     {
@@ -79,7 +86,58 @@ public class PlayerMovement : MonoBehaviour
 
         Vector3 desiredVelocity = new Vector3(projected.x, rb.velocity.y, projected.z);
         rb.velocity = Vector3.SmoothDamp(rb.velocity, desiredVelocity, ref currentVelocity, 0.05f);
+
+        PlayFootstepAudio();
     }
+
+    private void PlayFootstepAudio()
+    {
+        if (rb.velocity.magnitude < 0.1f || !isGrounded)
+        {
+            if (footstepSource.isPlaying)
+                footstepSource.Stop();
+
+            audioTimer = 0f;
+            return;
+        }
+
+        audioTimer += Time.deltaTime;
+
+        if (audioTimer < maxAudioTime || footstepSource.isPlaying)
+            return;
+
+        audioTimer = 0f;
+
+        Terrain terrain = Terrain.activeTerrain;
+        if (terrain == null) 
+            return;
+
+        Vector3 relativePos = GetMapPos();
+        int mapX = Mathf.FloorToInt(relativePos.x * terrain.terrainData.alphamapWidth);
+        int mapZ = Mathf.FloorToInt(relativePos.z * terrain.terrainData.alphamapHeight);
+
+        float[,,] map = terrain.terrainData.GetAlphamaps(mapX, mapZ, 1, 1);
+        int maxTextures = terrain.terrainData.alphamapLayers;
+
+        int maxIndex = 0;
+        float maxValue = 0f;
+
+        for (int i = 0; i < maxTextures; i++)
+        {
+            if (map[0, 0, i] > maxValue)
+            {
+                maxValue = map[0, 0, i];
+                maxIndex = i;
+            }
+        }
+
+        if (maxIndex < footstepClips.Count && footstepClips[maxIndex] != null)
+        {
+            footstepSource.clip = footstepClips[maxIndex];
+            footstepSource.Play();
+        }
+    }
+
 
     public void Jump()
     {

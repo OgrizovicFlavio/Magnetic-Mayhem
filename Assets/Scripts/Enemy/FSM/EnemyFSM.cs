@@ -7,7 +7,6 @@ public class EnemyFSM
     private BaseEnemyState currentState;
 
     public EnemyController GetController() => controller;
-
     public EnemyState CurrentStateType => currentState.GetStateType();
 
     public EnemyFSM(EnemyController controller)
@@ -41,7 +40,6 @@ public class EnemyFSM
 
         currentState?.OnExit();
         currentState = states.Find(s => s.GetStateType() == newState);
-
         currentState.OnEnter();
     }
 

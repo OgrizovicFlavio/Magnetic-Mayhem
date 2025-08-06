@@ -2,7 +2,7 @@ using UnityEngine;
 
 public class PatrolEnemyState : BaseEnemyState
 {
-    private Transform currentPatrolTarget;
+    private Transform currentTarget;
 
     public PatrolEnemyState(EnemyFSM fsm) : base(fsm)
     {
@@ -12,8 +12,10 @@ public class PatrolEnemyState : BaseEnemyState
     public override void OnEnter()
     {
         movement.StopMovement();
-        controller.MoveToRandomPatrolPoint();
-        currentPatrolTarget = controller.GetCurrentPatrolPoint();
+
+        // Si fue repelido, usar el punto más cercano
+        controller.SetClosestPatrolPointAsCurrent();
+        currentTarget = controller.GetCurrentPatrolPoint();
     }
 
     public override void OnUpdate()
@@ -30,22 +32,24 @@ public class PatrolEnemyState : BaseEnemyState
             return;
         }
 
-        if (currentPatrolTarget == null)
-            return;
+        if (currentTarget == null) return;
 
-        float distance = Vector3.Distance(controller.transform.position, currentPatrolTarget.position);
+        float distance = Vector3.Distance(controller.transform.position, currentTarget.position);
 
         if (distance < 0.5f)
         {
-            controller.MoveToRandomPatrolPoint();
-            currentPatrolTarget = controller.GetCurrentPatrolPoint();
-            return;
+            controller.GoToNextPatrolPoint();
+            currentTarget = controller.GetCurrentPatrolPoint();
         }
 
-        movement.MoveTowards(currentPatrolTarget.position);
-        movement.RotateTowards(currentPatrolTarget.position);
-        Debug.DrawLine(controller.transform.position, currentPatrolTarget.position, Color.green, 0.1f);
+        float height = controller.GetInitialHeight();
+        movement.MoveTowards(currentTarget.position, height);
+        movement.RotateTowards(currentTarget.position);
+        Debug.DrawLine(controller.transform.position, currentTarget.position, Color.green, 0.1f);
     }
 
-    public override void OnExit() { }
+    public override void OnExit()
+    {
+        movement.StopMovement();
+    }
 }

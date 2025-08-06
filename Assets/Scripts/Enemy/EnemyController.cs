@@ -1,17 +1,12 @@
 using UnityEngine;
 
 [RequireComponent(typeof(Rigidbody))]
-public class EnemyController : MonoBehaviour, IDamageable
+public class EnemyController : MonoBehaviour
 {
     [Header("Settings")]
     [SerializeField] private float chaseRange = 10f;
     [SerializeField] private float attackRange = 3f;
     [SerializeField] private Transform[] patrolPoints;
-
-    [Header("Health")]
-    [SerializeField] private float maxHealth = 100f;
-    [SerializeField] private float impactThreshold = 1f;
-    [SerializeField] private float impactDamageMultiplier = 10f;
 
     private EnemyFSM fsm;
     private EnemyAttack enemyAttack;
@@ -19,26 +14,42 @@ public class EnemyController : MonoBehaviour, IDamageable
     private Rigidbody rb;
     private Transform target;
 
-    private float currentHealth;
+    private bool isAttracted = false;
+    private bool isRepelled = false;
+    private float magnetizedStartTime;
     private int magnetizeCount = 0;
-    private int lastPatrolIndex = -1;
+    private bool isUnderMagnetEffect = false;
+    private bool wasRepelledOnce = false;
+    private bool hasCollidedWhileMagnetized = false;
+    private float initialHeight;
     private int currentPatrolIndex = 0;
+
+    #region Properties
+
+    public bool IsMagnetized() => magnetizeCount > 0;
+    public bool WasRepelled() => wasRepelledOnce;
+    public void SetWasRepelled(bool value) => wasRepelledOnce = value;
+    public void SetUnderMagnetEffect(bool value) => isUnderMagnetEffect = value;
+    public Rigidbody GetRigidbody() => rb;
+    public float GetInitialHeight() => initialHeight;
+    public void ResetCollisionFlag() => hasCollidedWhileMagnetized = false;
+    public bool IsAttracted() => isAttracted;
+    public bool IsRepelled() => isRepelled;
+
+    #endregion
 
     private void Awake()
     {
-        currentHealth = maxHealth;
-
         rb = GetComponent<Rigidbody>();
         enemyAttack = GetComponent<EnemyAttack>();
         enemyMovement = GetComponent<EnemyMovement>();
-
         fsm = new EnemyFSM(this);
+        initialHeight = transform.position.y;
 
         GameObject playerObj = GameManager.Instance.GetPlayer();
         if (playerObj != null)
         {
             target = playerObj.transform;
-
             enemyAttack?.SetPlayer(target);
         }
     }
@@ -51,11 +62,6 @@ public class EnemyController : MonoBehaviour, IDamageable
     private void Update()
     {
         fsm.OnUpdate();
-
-        if (fsm.CurrentStateType != EnemyState.Magnetized)
-        {
-            enemyMovement?.UpdateHeight();
-        }
     }
 
     private void OnCollisionEnter(Collision collision)
@@ -63,38 +69,45 @@ public class EnemyController : MonoBehaviour, IDamageable
         if (Utilities.CheckLayerInMask(LayerMask.GetMask("Player"), collision.gameObject.layer))
             return;
 
-        float impactForce = collision.relativeVelocity.magnitude;
-
-        if (impactForce >= impactThreshold)
-        {
-            float damage = impactForce * impactDamageMultiplier;
-            TakeDamage(damage);
-        }
-
         if (fsm.CurrentStateType == EnemyState.Magnetized &&
             !Utilities.CheckLayerInMask(LayerMask.GetMask("Projectile"), collision.gameObject.layer))
         {
-            enemyMovement.RegisterMagnetizedCollision();
+            hasCollidedWhileMagnetized = true;
         }
     }
 
-    #region FSM
+    public void ApplyRepulsion(Vector3 direction, float force)
+    {
+        if (isRepelled) return;
+
+        StopAllMovement();
+        rb.AddForce(direction.normalized * force, ForceMode.Impulse);
+
+        SetRepelled();
+        fsm.ChangeState(EnemyState.Magnetized);
+    }
+
+    #region FSM Access
 
     public Transform GetTarget() => target;
     public EnemyAttack GetAttackModule() => enemyAttack;
 
     public bool IsPlayerInChaseRange()
     {
-        if (target == null) return false;
+        if (target == null) 
+            return false;
+
         return Vector3.Distance(transform.position, target.position) <= chaseRange;
     }
 
     public bool IsPlayerInAttackRange()
     {
-        if (target == null) return false;
+        if (target == null) 
+            return false;
 
         Vector3 a = transform.position;
         Vector3 b = target.position;
+
         a.y = 0;
         b.y = 0;
 
@@ -108,35 +121,65 @@ public class EnemyController : MonoBehaviour, IDamageable
 
     #endregion
 
-    #region Magnetism
+    #region Magnetismo
 
-    public void SetMagnetize(bool active)
+    public void SetMagnetize(bool active, bool attracted = false)
     {
         if (active)
+        {
             magnetizeCount++;
+
+            // Solo permitir cambiar el flag SI NO está repelido
+            if (!isRepelled)
+            {
+                isAttracted = attracted;
+                if (attracted) isRepelled = false;
+            }
+
+            magnetizedStartTime = Time.time;
+        }
         else
+        {
             magnetizeCount = Mathf.Max(0, magnetizeCount - 1);
+            if (magnetizeCount == 0)
+            {
+                isAttracted = false;
+                isRepelled = false;
+            }
+        }
     }
 
-    public bool IsMagnetized() => magnetizeCount > 0;
-    public bool HasCollidedWhileMagnetized() => enemyMovement != null && enemyMovement.UpdateHeight(0.2f);
-    public void ResetCollisionFlag() => enemyMovement?.ResetMagnetizedCollision();
-
-    public void ApplyRepulsion(Vector3 direction, float force)
+    public void SetRepelled()
     {
-        enemyMovement?.ApplyRepulsion(direction, force);
-        fsm.ChangeState(EnemyState.Magnetized);
-        SetMagnetize(true);
+        isRepelled = true;
+        isAttracted = false;
+        wasRepelledOnce = true;
+        SetMagnetize(true, attracted: false);
     }
 
-    public bool UpdateHeight(float threshold = 0.1f)
+    public bool CanResumeFSM()
     {
-        return enemyMovement != null && enemyMovement.UpdateHeight(threshold);
+        if (isRepelled)
+        {
+            if (!hasCollidedWhileMagnetized)
+                return false;
+
+            float currentY = transform.position.y;
+            float targetY = initialHeight;
+            float deltaY = Mathf.Abs(currentY - targetY);
+        }
+
+        if (isAttracted)
+        {
+            return Time.time - magnetizedStartTime >= 2.5f;
+        }
+
+        return !IsMagnetized();
     }
 
     #endregion
 
-    #region Patrol System
+    #region Patrullaje
 
     public Transform GetCurrentPatrolPoint()
     {
@@ -146,42 +189,40 @@ public class EnemyController : MonoBehaviour, IDamageable
         return patrolPoints[currentPatrolIndex];
     }
 
-    public void MoveToRandomPatrolPoint()
+    public void GoToNextPatrolPoint()
     {
-        if (patrolPoints == null || patrolPoints.Length < 2) return;
+        if (patrolPoints == null || patrolPoints.Length == 0)
+            return;
 
-        int newIndex = currentPatrolIndex;
-        int maxTries = 10;
-        int tries = 0;
+        currentPatrolIndex = (currentPatrolIndex + 1) % patrolPoints.Length;
+    }
 
-        while ((newIndex == currentPatrolIndex || Vector3.Distance(transform.position, patrolPoints[newIndex].position) < 1.5f)
-               && tries < maxTries)
+    public void SetClosestPatrolPointAsCurrent()
+    {
+        if (patrolPoints == null || patrolPoints.Length == 0)
+            return;
+
+        float closestDist = Mathf.Infinity;
+        int closestIndex = 0;
+
+        for (int i = 0; i < patrolPoints.Length; i++)
         {
-            newIndex = Random.Range(0, patrolPoints.Length);
-            tries++;
+            float dist = Vector3.Distance(transform.position, patrolPoints[i].position);
+            if (dist < closestDist)
+            {
+                closestDist = dist;
+                closestIndex = i;
+            }
         }
 
-        lastPatrolIndex = currentPatrolIndex;
-        currentPatrolIndex = newIndex;
+        currentPatrolIndex = closestIndex;
     }
 
     #endregion
 
-    #region Life System
-
-    public void TakeDamage(float amount)
+    public void StopAllMovement()
     {
-        currentHealth -= amount;
-        if (currentHealth <= 0)
-        {
-            Die();
-        }
+        rb.velocity = Vector3.zero;
+        rb.angularVelocity = Vector3.zero;
     }
-
-    private void Die()
-    {
-        Destroy(gameObject);
-    }
-
-    #endregion
 }

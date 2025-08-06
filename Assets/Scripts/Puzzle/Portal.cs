@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class Portal : MonoBehaviour
 {
@@ -32,9 +33,15 @@ public class Portal : MonoBehaviour
         if (canInteract && Input.GetKeyDown(KeyCode.E))
         {
             if (isExitPortal)
+            {
+                string scene = SceneManager.GetActiveScene().name;
+                GameManager.Instance.RegisterLevelCompleted(scene);
                 GameManager.Instance.GoToMain();
+            }
             else
+            {
                 GameManager.Instance.GoToArea(sceneToLoad);
+            }
         }
     }
 

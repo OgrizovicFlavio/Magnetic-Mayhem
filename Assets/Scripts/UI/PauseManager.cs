@@ -21,8 +21,10 @@ public class PauseManager : MonoBehaviourSingleton<PauseManager>
     protected override void OnAwaken()
     {
         Time.timeScale = 1;
-        if (pauseMenu != null) pauseMenu.SetActive(false);
-        if (crosshair != null) crosshair.SetActive(true);
+        if (pauseMenu != null) 
+            pauseMenu.SetActive(false);
+        if (crosshair != null) 
+            crosshair.SetActive(true);
     }
 
     private void OnEnable()
@@ -53,6 +55,9 @@ public class PauseManager : MonoBehaviourSingleton<PauseManager>
     {
         if (Input.GetKeyDown(KeyCode.Escape))
         {
+            if (GameManager.Instance != null && GameManager.Instance.IsGameEnded())
+                return;
+
             if (!isPaused)
                 PauseGame();
             else
@@ -98,6 +103,8 @@ public class PauseManager : MonoBehaviourSingleton<PauseManager>
             pauseMenu.SetActive(false);
         if (crosshair != null) 
             crosshair.SetActive(false);
+
+        isPaused = false;
 
         CustomSceneManager.Instance.ChangeSceneTo("Main Menu");
     }

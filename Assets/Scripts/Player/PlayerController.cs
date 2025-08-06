@@ -210,7 +210,7 @@ public class PlayerController : MonoBehaviour
     {
         Ray ray = mainCamera.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0f));
 
-        if (Physics.Raycast(ray, out RaycastHit hit, 25f))
+        if (Physics.Raycast(ray, out RaycastHit hit, 10f))
         {
             var c = hit.collider.GetComponentInParent<Controllable>();
             if (c != null)

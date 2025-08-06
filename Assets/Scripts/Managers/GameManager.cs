@@ -10,12 +10,21 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
     [SerializeField] private string worldScene;
     [SerializeField] private string sceneToLoad;
 
+    [Header("Game States")]
+    [SerializeField] private GameObject winPanel;
+    [SerializeField] private GameObject losePanel;
+    [SerializeField] private GameObject creditsPanel;
+
     [Header("Prefabs")]
     [SerializeField] private Sticky stickyMagnetProjectile;
 
     private string loadedAreaSceneName;
     private SceneReferences main;
     private SceneReferences current;
+    private bool gameEnded = false;
+    private bool completedArea1 = false;
+    private bool completedArea2 = false;
+
     public bool IsTransitioning { get; set; }
 
     private void Start()
@@ -96,6 +105,49 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
         SceneManager.SetActiveScene(newScene);
     }
 
+    public void RegisterLevelCompleted(string areaName)
+    {
+        if (areaName == "Area 1") completedArea1 = true;
+        else if (areaName == "Area 2") completedArea2 = true;
+
+        if (completedArea1 && completedArea2)
+            WinGame();
+    }
+
+    public void WinGame()
+    {
+        if (gameEnded) return;
+
+        gameEnded = true;
+        Time.timeScale = 0f;
+
+        if (winPanel != null)
+            winPanel.SetActive(true);
+
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
+    }
+
+    public void LoseGame()
+    {
+        if (gameEnded) return;
+
+        gameEnded = true;
+        Time.timeScale = 0f;
+
+        if (losePanel != null)
+            losePanel.SetActive(true);
+
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
+    }
+
+    public void ShowCredits()
+    {
+        if (creditsPanel != null)
+            creditsPanel.SetActive(true);
+    }
+
     public void RegisterPlayer(GameObject player)
     {
         playerRoot = player;
@@ -105,6 +157,11 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
     public GameObject GetPlayer()
     {
         return playerRoot;
+    }
+
+    public bool IsGameEnded()
+    {
+        return gameEnded;
     }
 }
 

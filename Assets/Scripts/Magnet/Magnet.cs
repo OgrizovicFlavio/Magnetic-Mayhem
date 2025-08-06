@@ -79,31 +79,32 @@ public class Magnet : MonoBehaviour
                 continue;
 
             var enemy = other.GetComponentInParent<EnemyController>();
-            if (enemy != null && other.Charge == this.Charge)
+            bool isSameCharge = (this.Charge == other.Charge);
+            bool isOppositeCharge = (this.Charge != other.Charge);
+
+            if (enemy != null)
             {
-                if (!enemiesRepelledOnce.Contains(enemy))
+                if (isSameCharge)
                 {
-                    Vector3 horizontal = (other.transform.position - transform.position);
-                    horizontal.y = 0f;
+                    if (!enemiesRepelledOnce.Contains(enemy))
+                    {
+                        Vector3 repulsionDir = CalculateRepulsionDirection(other.transform.position);
+                        float force = CalculateRepulsionForce(other.transform.position);
 
-                    Vector3 repulsionDir = (horizontal + Vector3.up * 1.5f).normalized;
-
-                    float distance = Mathf.Max(Vector3.Distance(transform.position, other.transform.position), 0.1f);
-                    float attenuation = 1f / Mathf.Pow(distance, 1.2f);
-                    float finalForce = repulsionForce * attenuation * 50f;
-
-                    enemy.ApplyRepulsion(repulsionDir, finalForce);
-
-                    enemiesRepelledOnce.Add(enemy);
-                    Debug.Log($"[MAGNET] Repulsión puntual a {enemy.name}");
+                        enemy.ApplyRepulsion(repulsionDir, force);
+                        enemiesRepelledOnce.Add(enemy);
+                    }
+                    continue;
                 }
-
-                continue;
+                else if (isOppositeCharge)
+                {
+                    enemy.SetMagnetize(true, attracted: true);
+                }
             }
 
-            // Atracción o repulsión normal
+            //Fuerza general (atracción o repulsión entre imanes no enemigos)
             Vector3 direction = (other.transform.position - transform.position).normalized;
-            if (this.Charge != other.Charge)
+            if (isOppositeCharge)
                 direction *= -1;
 
             float adjustedForce = magneticForce / Mathf.Max(rb.mass, 1f);
@@ -176,7 +177,6 @@ public class Magnet : MonoBehaviour
         if (enemy != null && !enemiesInField.Contains(enemy))
         {
             enemiesInField.Add(enemy);
-            enemy.SetMagnetize(true);
         }
     }
 
@@ -192,7 +192,11 @@ public class Magnet : MonoBehaviour
         if (enemy != null && enemiesInField.Contains(enemy))
         {
             enemiesInField.Remove(enemy);
-            enemy.SetMagnetize(false);
+
+            if (!enemy.WasRepelled())
+            {
+                enemy.SetMagnetize(false);
+            }
         }
     }
 
@@ -216,5 +220,19 @@ public class Magnet : MonoBehaviour
         }
 
         magnetsIgnored.Clear();
+    }
+
+    private Vector3 CalculateRepulsionDirection(Vector3 otherPosition)
+    {
+        Vector3 direction = (otherPosition - transform.position);
+        direction.y = 0f;
+        return (direction + Vector3.up * 1.5f).normalized;
+    }
+
+    private float CalculateRepulsionForce(Vector3 otherPosition)
+    {
+        float distance = Mathf.Max(Vector3.Distance(transform.position, otherPosition), 0.1f);
+        float attenuation = 1f / Mathf.Pow(distance, 1.2f);
+        return repulsionForce * attenuation * 100f;
     }
 }

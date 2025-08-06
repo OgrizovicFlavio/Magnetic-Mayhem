@@ -31,6 +31,7 @@ public class PlayerHealth : MonoBehaviour, IDamageable
 
     private void Die()
     {
+        GameManager.Instance?.LoseGame();
     }
 
     private void OnCollisionEnter(Collision collision)
